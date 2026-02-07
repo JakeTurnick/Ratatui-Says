@@ -34,27 +34,31 @@ impl Colors {
 
 pub struct Simon {
     level: i8,
-    current_pattern: Vec<Colors>,
+    pub current_pattern: Vec<Colors>,
 
 }
 
 impl Simon {
     pub fn new() -> Simon {
+        let starting_pattern = vec!(Colors::from_index(rand::random_range(0..=3)).expect("Random range should be within bounds of hard-coded enum"));
         Simon {
             level: 1,
-            current_pattern: Vec::new()
+            current_pattern: starting_pattern
         }
     }
 
+    // really just for debugging and testing Display and from_index()
     pub fn new_pattern(&self)  {
         let starting_color = rand::random_range(0..=3);
         let color = Colors::from_index(starting_color).unwrap();
         println!("{starting_color}, is {color}");
     }
 
-    fn add_to_pattern(&mut self) -> Vec<Colors> {
-        // self.current_pattern = ...
-        todo!()
+    pub fn add_to_pattern(&mut self, iterations: i8) {
+        for _i in 1..iterations {
+            let new_color = Colors::from_index(rand::random_range(0..=3)).expect("Random range should be within bounds of hard-coded enum");
+            self.current_pattern.push(new_color);
+        }
     }
 
 }

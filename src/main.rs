@@ -37,7 +37,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // Create & Start simon App
     let mut simon = Simon::new();
-    let res = run_app(&mut terminal, simon);
+    let res = run_app(&mut terminal, &mut simon);
 
     // Clean up terminal
     // `?` pass errors back up to Box<dyn Error>
@@ -54,11 +54,20 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: Simon) -> io::Result<bool> {
+fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Result<bool> {
     loop {
+
+        simon.add_to_pattern(5);
+        println!("{:?}", simon.current_pattern);
+
+        /* Simon builds up a pattern corretly
+        println!("{:?}", simon.current_pattern);
+        simon.add_to_pattern();
+        */
+
         //terminal.draw(|f| ui(f, &simon))?;
 
-        simon.new_pattern();
+
         if let Event::Key(key) = event::read()? {
             if key.kind == event::KeyEventKind::Release {
                 continue;
