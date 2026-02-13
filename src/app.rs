@@ -1,7 +1,7 @@
 use rand;
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum Colors {
     RED,
     YELLOW,
@@ -32,10 +32,26 @@ impl Colors {
     }
 }
 
+pub struct Game_State {
+    pub showing_pattern: bool,
+    pub awaiting_input: bool,
+    pub shown_color: Option<Colors>
+}
+
+impl Game_State {
+    pub fn new() -> Game_State {
+        Game_State { 
+            showing_pattern: false, 
+            awaiting_input: false,
+            shown_color: None
+        }
+    }
+}
+
 pub struct Simon {
     level: i8,
     pub current_pattern: Vec<Colors>,
-
+    pub game_state: Game_State
 }
 
 impl Simon {
@@ -43,15 +59,9 @@ impl Simon {
         let starting_pattern = vec!(Colors::from_index(rand::random_range(0..=3)).expect("Random range should be within bounds of hard-coded enum"));
         Simon {
             level: 1,
-            current_pattern: starting_pattern
+            current_pattern: starting_pattern,
+            game_state: Game_State::new()
         }
-    }
-
-    // really just for debugging and testing Display and from_index()
-    pub fn new_pattern(&self)  {
-        let starting_color = rand::random_range(0..=3);
-        let color = Colors::from_index(starting_color).unwrap();
-        println!("{starting_color}, is {color}");
     }
 
     pub fn add_to_pattern(&mut self, iterations: i8) {

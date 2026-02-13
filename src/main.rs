@@ -1,6 +1,8 @@
 use std::{
     io,
-    error::Error
+    error::Error,
+    thread,
+    time::Duration
 };
 
 use ratatui::{
@@ -37,6 +39,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // Create & Start simon App
     let mut simon = Simon::new();
+    simon.add_to_pattern(4); // Start with 1 color
+    simon.game_state.showing_pattern = true;
+
+    /* Todo - remove */ println!("{:?}", simon.current_pattern);
+
     let res = run_app(&mut terminal, &mut simon);
 
     // Clean up terminal
@@ -45,7 +52,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     execute!(terminal.backend_mut(), DisableMouseCapture, LeaveAlternateScreen)?;
     terminal.show_cursor()?;
 
-    if let Ok(exit_game) = res {
+    if let Ok(_exit_game) = res {
         println!("Thanks for playing!");
     } else if let Err(err) = res {
         println!("{err:?}");
@@ -57,28 +64,46 @@ fn main() -> Result<(), Box<dyn Error>> {
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Result<bool> {
     loop {
 
-        simon.add_to_pattern(5);
-        println!("{:?}", simon.current_pattern);
+        // THIS WILL ADD ON EVERY INPUT - 
+        // todo: make some state for "actively_inputting" or something
+        //simon.add_to_pattern(3);
 
-        /* Simon builds up a pattern corretly
-        println!("{:?}", simon.current_pattern);
-        simon.add_to_pattern();
-        */
+        /* - WORKS - colors appear on screen, commented out to work on click event
+        if simon.game_state.showing_pattern == true {
+            for (i, color) in simon.current_pattern.iter().enumerate() {
+                simon.game_state.shown_color = Some(*color); // they say it's wrong but idk how to be right
+                
+                terminal.draw(|f| ui(f, simon));
 
-        //terminal.draw(|f| ui(f, &simon))?;
+                // draw blank with pause, duplicate colors show each as a flash
+                thread::sleep(Duration::from_secs_f32(0.5));
+                simon.game_state.shown_color = None;
+                terminal.draw(|f| ui(f, simon));
+                thread::sleep(Duration::from_secs_f32(0.5));
+            }
+            simon.game_state.shown_color = None;
+            simon.game_state.showing_pattern = false;
+        } 
+        else if simon.game_state.awaiting_input == true {
+            // Take mouse / key input for colors
+
+            simon.game_state.awaiting_input = false;
+        }*/
+
+        //terminal.draw(|f| ui(f, simon));
 
 
         if let Event::Key(key) = event::read()? {
             if key.kind == event::KeyEventKind::Release {
+                println!("Mouse pressed!");
                 continue;
             }
 
             match key.code {
-                KeyCode::Char('q') => { return Ok(true); }
+                KeyCode::Esc => { return Ok(true); },
                 _ => {}
             }
         } 
     }
 
-    todo!()
 }
