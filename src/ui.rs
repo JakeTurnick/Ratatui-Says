@@ -39,13 +39,22 @@ pub fn ui(frame: &mut Frame, simon: &mut Simon) {
 
     frame.render_widget(title, title_chunks[0]);
 
+    let buttons_block = Block::default()
+        .borders(Borders::ALL)
+        .padding(Padding::new(1, 1, 1, 1))
+        .style(Style::default());
+    // clone first
+    let button_block_area = buttons_block.inner(chunks[1]).clone();
+    // move value later
+    frame.render_widget(buttons_block, chunks[1]);
+
     let button_row_chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([
             Constraint::Percentage(50),
             Constraint::Percentage(50)
         ])
-        .split(chunks[1]);
+        .split(button_block_area);
 
     let button_top_chunks = Layout::default()
         .direction(Direction::Vertical)
