@@ -2,7 +2,7 @@ use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     text::{Line, Span, Text},
-    widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Wrap, Padding},
+    widgets::{Block, Borders, BorderType, Clear, List, ListItem, Paragraph, Wrap, Padding},
     Frame,
 };
 
@@ -63,71 +63,82 @@ pub fn ui(frame: &mut Frame, simon: &mut Simon) {
         ])
         .split(button_row_chunks[1]);
 
+    let normal_border= Borders::NONE;
+    let selected_border = Borders::ALL;
 
-    let mut red_color : ratatui::style::Color = Color::Red;
-    let mut yellow_color : ratatui::style::Color = Color::Yellow;
-    let mut green_color : ratatui::style::Color = Color::Green;
-    let mut blue_color : ratatui::style::Color = Color::Blue;
+    let mut red_border = normal_border;
+    let mut yellow_border = normal_border;
+    let mut green_border = normal_border;
+    let mut blue_border = normal_border;
+
+    let mut red_color: ratatui::style::Color = Color::Red;
+    let mut yellow_color: ratatui::style::Color = Color::Yellow;
+    let mut green_color: ratatui::style::Color = Color::Green;
+    let mut blue_color: ratatui::style::Color = Color::Blue;
     match simon.game_state.shown_color {
-        Some(Game_Colors::RED) => red_color = Color::LightRed,
-        Some(Game_Colors::YELLOW) => yellow_color = Color::LightYellow,
-        Some(Game_Colors::GREEN) => green_color = Color::LightGreen,
-        Some(Game_Colors::BLUE) => blue_color = Color::LightBlue,
+        Some(Game_Colors::RED) => {
+            red_color = Color::LightRed;
+            red_border = selected_border;
+        },
+        Some(Game_Colors::YELLOW) => {
+            yellow_color = Color::LightYellow;
+            yellow_border = selected_border;
+        },
+        Some(Game_Colors::GREEN) => {
+            green_color = Color::LightGreen;
+            green_border = selected_border;
+        },
+        Some(Game_Colors::BLUE) => {
+            blue_color = Color::LightBlue;
+            blue_border = selected_border;
+        },
         None => {}
     }
 
     let red_block = Block::default()
-            .borders(Borders::ALL)
+            .borders(red_border)
+            .border_type(BorderType::Thick)
             .padding(Padding::new(5, 5, 5, 5))
             .style(Style::default().bg(red_color));
-    let red_inner_area = red_block.inner(button_top_chunks[0]).clone();
     
     frame.render_widget(red_block, button_top_chunks[0]);
 
     let yellow_block = Block::default()
-            .borders(Borders::ALL)
+            .borders(yellow_border)
+            .border_type(BorderType::Thick)
             .padding(Padding::new(5, 5, 5, 5))
             .style(Style::default().bg(yellow_color));
-    let yellow_inner_area = yellow_block.inner(button_top_chunks[1]).clone();
     
     frame.render_widget(yellow_block, button_top_chunks[1]);
 
     let green_block = Block::default()
-            .borders(Borders::ALL)
+            .borders(green_border)
+            .border_type(BorderType::Thick)
             .padding(Padding::new(5, 5, 5, 5))
             .style(Style::default().bg(green_color));
-    let green_inner_area = green_block.inner(button_bottom_chunks[0]).clone();
     
     frame.render_widget(green_block, button_bottom_chunks[0]);
 
     let blue_block = Block::default()
-            .borders(Borders::ALL)
+            .borders(blue_border)
+            .border_type(BorderType::Thick)
             .padding(Padding::new(5, 5, 5, 5))
             .style(Style::default().bg(blue_color));
     
-    let blue_inner_area = blue_block.inner(button_bottom_chunks[1]).clone();
     
     frame.render_widget(blue_block, button_bottom_chunks[1]);
-    
-    /*let button_bounds: Vec<Bounds_2d> = vec!(
-        Bounds_2d {
-            x_min: blue_inner_area.x,
-            x_max: blue_inner_area.x + blue_inner_area.width,
-            y_min: blue_inner_area.y, 
-            y_max: blue_inner_area.y + blue_inner_area.height
-        }
-    );*/
+
 
     simon.game_state.clickables.clear();
 
-    simon.game_state.clickables.push((Game_Colors::RED, red_inner_area));
-    simon.game_state.clickables.push((Game_Colors::YELLOW, yellow_inner_area));
-    simon.game_state.clickables.push((Game_Colors::GREEN, green_inner_area));
-    simon.game_state.clickables.push((Game_Colors::BLUE, blue_inner_area));
+    simon.game_state.clickables.push((Game_Colors::RED, button_top_chunks[0]));
+    simon.game_state.clickables.push((Game_Colors::YELLOW, button_top_chunks[1]));
+    simon.game_state.clickables.push((Game_Colors::GREEN, button_bottom_chunks[0]));
+    simon.game_state.clickables.push((Game_Colors::BLUE, button_bottom_chunks[1]));
 
     
     /* DEBUG TITLE */
-    let debug_msg = format!("{}, frame time: {:?}", simon.debug_msg, simon.game_state.last_frame_time);
+    let debug_msg = format!("{}", simon.debug_msg);
 
     let dubug_block = Block::default()
         .borders(Borders::ALL);

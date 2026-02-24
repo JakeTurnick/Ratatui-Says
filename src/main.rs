@@ -1,5 +1,7 @@
 use std::{
-    error::Error, io, thread, time::{Duration, Instant}
+    error::Error, io, time::{Duration, Instant},
+    sync::mpsc,
+    thread
 };
 
 use ratatui::{
@@ -20,7 +22,8 @@ use crate::{
     app::{
         Simon,
         Colors,
-        Bounds_2d
+        Game_Event,
+        Game_Mode
     },
     ui::ui
 };
@@ -37,13 +40,9 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // Create & Start simon App
     let mut simon = Simon::new();
-    simon.add_to_pattern(4); // Start with 1 color
-    simon.game_state.showing_pattern = true;
-
-    let last_tick = Instant::now();
-    let tick_rate = Duration::from_millis(16);
+    simon.add_to_pattern(4); // Start with 4 colors
     
-    let res = run_app(&mut terminal, &mut simon, last_tick, tick_rate);
+    let res = run_app(&mut terminal, &mut simon);
 
     // Clean up terminal
     // `?` pass errors back up to Box<dyn Error>
@@ -60,118 +59,69 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon, mut last_tick: Instant, tick_rate: Duration) -> io::Result<bool> {
-    loop {
+fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Result<()> {
+    let (tx, rx) = mpsc::channel();
+    let tick_rate = Duration::from_millis(16);
 
-        let start_time = Instant::now();
-        // THIS WILL ADD ON EVERY INPUT - 
-        // todo: make some state for "actively_inputting" or something
-        //simon.add_to_pattern(3);
+    // Input loop (event polling in separate thread to avoid blocking UI draws)
+    let event_tx = tx.clone();
+    std::thread::spawn(move || {
+        let mut last_tick = Instant::now();
+        loop {
+            // define game ticks
+            let timeout = tick_rate
+                .checked_sub(last_tick.elapsed())
+                .unwrap_or(Duration::from_millis(1));
 
-        /* - WORKS - colors appear on screen, commented out to work on click event
-        if simon.game_state.showing_pattern == true {
-            for (i, color) in simon.current_pattern.iter().enumerate() {
-                simon.game_state.shown_color = Some(*color); // they say it's wrong but idk how to be right
-                
-                terminal.draw(|f| ui(f, simon));
-
-                // draw blank with pause, duplicate colors show each as a flash
-                thread::sleep(Duration::from_secs_f32(0.5));
-                simon.game_state.shown_color = None;
-                terminal.draw(|f| ui(f, simon));
-                thread::sleep(Duration::from_secs_f32(0.5));
-            }
-            simon.game_state.shown_color = None;
-            simon.game_state.showing_pattern = false;
-        } 
-        else if simon.game_state.awaiting_input == true {
-            // Take mouse / key input for colors
-
-            simon.game_state.awaiting_input = false;
-        }*/
-
-
-        
-
-        while event::poll(Duration::from_millis(0))? {
-            /*
-                Try updating a mouse_selection property on mouse
-
-                How would this be different from getting mouse_pos on click event,
-                without making a button type to select?
-
-                By updating color selection
-             */
-            if let Event::Mouse(mouse) = event::read()? {
-                if mouse.kind == event::MouseEventKind::Moved {
-                    simon.game_state.mouse_pos = (mouse.column, mouse.row);
-
-                    
+            // check for event within tick, sent to rx thread
+            if event::poll(timeout).expect("Poll failed") {
+                if let Ok(ev) = event::read() {
+                    event_tx.send(Game_Event::Input(ev)).unwrap();
                 }
-                if mouse.kind == event::MouseEventKind::Down(MouseButton::Left) {
-                    //simon.debug_msg= format!("left click at {:?}, {:?}", mouse.column, mouse.row);
-                    if let Some(color) = simon.game_state.selected_color {
-                        simon.debug_msg = format!("click detected! color: {}", color);
+            }
+
+            // reset current tick
+            if last_tick.elapsed() >= tick_rate {
+                if event_tx.send(Game_Event::Tick).is_ok() {
+                    last_tick = Instant::now();
+                }
+            }
+        }
+    });
+
+    // Main loop
+    loop {
+        match rx.recv().unwrap() {
+            Game_Event::Input(event) => {
+                match event {
+                    Event::Key(key) => {
+                        // Exit game
+                        if key.code == KeyCode::Esc { return Ok(()); }
                     }
-                    
+                    Event::Mouse(mouse) => {
+                        simon.game_state.mouse_pos = (mouse.column, mouse.row);
 
-                    /*
-                    let mouse_pos = (mouse.column, mouse.row);
+                        if mouse.kind == event::MouseEventKind::Down(MouseButton::Left) {
+                            let pos = simon.game_state.mouse_pos.into();
+                            let clicked_color = simon.game_state.clickables.iter().rev()
+                                .find(|(_, r)| r.contains(pos))
+                                .map(|(color, _)| *color);
 
-                    if let Some((color, _rect)) = simon.game_state.clickables.iter().rev().find(|(_, r)| r.contains(mouse_pos.into())) {
-                        match color {
-                            Colors::RED => {
-                                simon.debug_msg = String::from("clicked red!");
-                                simon.game_state.missed_clicks = 0;
-                            },
-                            Colors::YELLOW => {
-                                simon.debug_msg = String::from("clicked yellow!");
-                                simon.game_state.missed_clicks = 0;
-                            },
-                            Colors::GREEN => {
-                                simon.debug_msg = String::from("clicked green!");
-                                simon.game_state.missed_clicks = 0;
-                            },
-                            Colors::BLUE => {
-                                simon.debug_msg = String::from("clicked blue!");
-                                simon.game_state.missed_clicks = 0;
-                            },
-                            _ => { }
+                            if let Some(color) = clicked_color {                                
+                                simon.handle_player_guess(color);
+                            } else {
+                                simon.debug_msg = format!("MISS! No color at {:?}", pos);
+                            }
                         }
                     }
-                    simon.game_state.missed_clicks += 1;
-                    */
-                }
-            }
-
-            if let Event::Key(key) = event::read()? {
-                if key.kind == event::KeyEventKind::Release {
-                    continue;
-                }
-
-                match key.code {
-                    KeyCode::Esc => { return Ok(true); },
-                    KeyCode::Char('q') => { println!("\rIts a Q"); }
-                    KeyCode::Char('e') => { println!("");}
                     _ => {}
                 }
             }
+            Game_Event::Tick => {
+                simon.show_pattern(); 
 
-        }
-
-        if last_tick.elapsed() >= tick_rate {
-            if let Some((color, _rect)) = simon.game_state.clickables.iter().rev().find(|(_, r)| r.contains(simon.game_state.mouse_pos.into())) {
-                simon.game_state.selected_color = Some(*color);
-                simon.debug_msg = format!("Hovered color: {:?} at {:?}", simon.game_state.selected_color, simon.game_state.mouse_pos);
+                terminal.draw(|f| ui(f, simon))?;
             }
-
-            terminal.draw(|f| ui(f, simon))?;
-            last_tick = Instant::now();
-
-            simon.game_state.last_frame_time = start_time.elapsed();
         }
-        std::thread::sleep(Duration::from_millis(1));
-        
     }
-
 }
