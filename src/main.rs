@@ -22,8 +22,8 @@ use crate::{
     app::{
         Simon,
         Colors,
-        Game_Event,
-        Game_Mode
+        GameEvent,
+        GameMode
     },
     ui::ui
 };
@@ -76,13 +76,13 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
             // check for event within tick, sent to rx thread
             if event::poll(timeout).expect("Poll failed") {
                 if let Ok(ev) = event::read() {
-                    event_tx.send(Game_Event::Input(ev)).unwrap();
+                    event_tx.send(GameEvent::Input(ev)).unwrap();
                 }
             }
 
             // reset current tick
             if last_tick.elapsed() >= tick_rate {
-                if event_tx.send(Game_Event::Tick).is_ok() {
+                if event_tx.send(GameEvent::Tick).is_ok() {
                     last_tick = Instant::now();
                 }
             }
@@ -92,7 +92,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
     // Main loop
     loop {
         match rx.recv().unwrap() {
-            Game_Event::Input(event) => {
+            GameEvent::Input(event) => {
                 match event {
                     Event::Key(key) => {
                         // Exit game
@@ -117,7 +117,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
                     _ => {}
                 }
             }
-            Game_Event::Tick => {
+            GameEvent::Tick => {
                 simon.show_pattern(); 
 
                 terminal.draw(|f| ui(f, simon))?;

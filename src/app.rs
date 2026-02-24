@@ -40,20 +40,20 @@ impl Colors {
     }
 }
 
-pub enum Game_Event {
+pub enum GameEvent {
     Input(event::Event),
     Tick
 }
 
-pub struct Game_State {
+pub struct GameState {
     pub shown_color: Option<Colors>,
     pub mouse_pos: (u16, u16),
     pub clickables: Vec<(Colors, Rect)>,
 }
 
-impl Game_State {
-    pub fn new() -> Game_State {
-        Game_State { 
+impl GameState {
+    pub fn new() -> GameState {
+        GameState { 
             shown_color: None,
             mouse_pos: (0, 0),
             clickables: vec!(),
@@ -62,10 +62,10 @@ impl Game_State {
 }
 
 #[derive(PartialEq)]
-pub enum Game_Mode {
+pub enum GameMode {
     Preparing,
-    Showing_Pattern,
-    Awaiting_Input,
+    ShowingPattern,
+    AwaitingInput,
     GameOver,
 }
 
@@ -73,8 +73,8 @@ pub struct Simon {
     pub current_pattern: Vec<Colors>,
     pub step_index: usize,          // index of current_pattern
     pub last_step_time: Instant,    // color flash timings
-    pub mode: Game_Mode,
-    pub game_state: Game_State,
+    pub mode: GameMode,
+    pub game_state: GameState,
     pub debug_msg: String,
 }
 
@@ -84,8 +84,8 @@ impl Simon {
             current_pattern: Vec::new(),
             step_index: 0,
             last_step_time: Instant::now(),
-            mode: Game_Mode::Preparing,
-            game_state: Game_State::new(),
+            mode: GameMode::Preparing,
+            game_state: GameState::new(),
             debug_msg: String::from("debug")
         }
     }
@@ -96,15 +96,15 @@ impl Simon {
     pub fn show_pattern(&mut self) {
 
         match self.mode {
-            Game_Mode::Preparing => {
+            GameMode::Preparing => {
                 // wait 1 second, start the sequence
                 if self.last_step_time.elapsed() > Duration::from_millis(1000) {
-                    self.mode = Game_Mode::Showing_Pattern;
+                    self.mode = GameMode::ShowingPattern;
                     self.step_index = 0;
                     self.last_step_time = Instant::now();
                 }
             }, 
-            Game_Mode::Showing_Pattern => {
+            GameMode::ShowingPattern => {
                 //self.debug_msg = format!("showing parttern: (Step, Len) ({}, {})", self.step_index, self.current_pattern.len() - 1);
                 let elapsed = self.last_step_time.elapsed();
                 
@@ -115,7 +115,7 @@ impl Simon {
 
                     // Reset to Player's turn
                     if self.step_index >= self.current_pattern.len() {
-                        self.mode = Game_Mode::Awaiting_Input;
+                        self.mode = GameMode::AwaitingInput;
                         self.game_state.shown_color = None;
                         self.step_index = 0;
                     }
@@ -139,7 +139,7 @@ impl Simon {
     }
 
     pub fn handle_player_guess(&mut self, color: Colors) {
-        if self.mode != Game_Mode::Awaiting_Input {
+        if self.mode != GameMode::AwaitingInput {
             return;
         }
         if color == self.current_pattern[self.step_index] {
@@ -150,11 +150,11 @@ impl Simon {
                 self.debug_msg = format!("New pattern!");
                 self.add_to_pattern(1);
 
-                self.mode = Game_Mode::Preparing;
+                self.mode = GameMode::Preparing;
             } 
         } else {
             self.debug_msg = format!("Wrong Guess - Game over!");
-            self.mode = Game_Mode::GameOver;
+            self.mode = GameMode::GameOver;
         }
     }
 
