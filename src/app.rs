@@ -2,7 +2,6 @@ use rand;
 use std::{
     fmt, 
     time::{Duration, Instant},
-    thread
 };
 use ratatui::{
     layout::Rect,

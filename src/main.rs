@@ -1,7 +1,6 @@
 use std::{
     error::Error, io, time::{Duration, Instant},
     sync::mpsc,
-    thread
 };
 
 use ratatui::{
@@ -9,7 +8,7 @@ use ratatui::{
         Backend,
         CrosstermBackend
     }, crossterm::{
-        event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyEventKind, KeyCode, MouseButton},
+        event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, MouseButton},
         execute,
         terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode}
     } 
@@ -21,9 +20,7 @@ mod ui;
 use crate::{
     app::{
         Simon,
-        Colors,
         GameEvent,
-        GameMode
     },
     ui::ui
 };
@@ -33,7 +30,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Set up terminal
     enable_raw_mode()?;
     let mut stderr = io::stderr();
-    execute!(stderr, EnableMouseCapture, EnterAlternateScreen);
+     let _ = execute!(stderr, EnableMouseCapture, EnterAlternateScreen);
 
     let backend = CrosstermBackend::new(stderr);
     let mut terminal = Terminal::new(backend)?;
@@ -47,7 +44,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Clean up terminal
     // `?` pass errors back up to Box<dyn Error>
     disable_raw_mode()?;
-    execute!(terminal.backend_mut(), DisableMouseCapture, LeaveAlternateScreen)?;
+    let _ = execute!(terminal.backend_mut(), DisableMouseCapture, LeaveAlternateScreen)?;
     terminal.show_cursor()?;
 
     if let Ok(_exit_game) = res {
