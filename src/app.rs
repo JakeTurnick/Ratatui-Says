@@ -44,6 +44,24 @@ pub enum GameEvent {
     Tick
 }
 
+pub enum Scene {
+    MainMenu,
+    Game,
+    Scores
+}
+
+pub struct AppState {
+    pub current_scene: Scene
+}
+
+impl AppState {
+    fn new() -> AppState {
+        AppState {
+        current_scene: Scene::MainMenu
+        }
+    }
+}
+
 pub struct GameState {
     pub shown_color: Option<Colors>,
     pub mouse_pos: (u16, u16),
@@ -68,12 +86,16 @@ pub enum GameMode {
     GameOver,
 }
 
+// Should hold overarchin state and info
+// TODO - move game state & logic into game_state
+// ^-- GOAL: start new game with `simon.game_state = GameState::new()`
 pub struct Simon {
     pub current_pattern: Vec<Colors>,
     pub step_index: usize,          // index of current_pattern
     pub last_step_time: Instant,    // color flash timings
     pub mode: GameMode,
     pub game_state: GameState,
+    pub app_state: AppState,
     pub debug_msg: String,
 }
 
@@ -85,6 +107,7 @@ impl Simon {
             last_step_time: Instant::now(),
             mode: GameMode::Preparing,
             game_state: GameState::new(),
+            app_state: AppState::new(),
             debug_msg: String::from("debug")
         }
     }
@@ -130,10 +153,10 @@ impl Simon {
         }   
     }
 
-    pub fn add_to_pattern(&mut self, iterations: i8) {
+    pub fn add_to_pattern(pattern: &mut Vec<Colors>, iterations: i8) {
         for _i in 0..iterations {
             let new_color = Colors::from_index(rand::random_range(0..=3)).expect("Random range should be within bounds of hard-coded enum");
-            self.current_pattern.push(new_color);
+            pattern.push(new_color);
         }
     }
 
@@ -147,7 +170,8 @@ impl Simon {
 
             if self.step_index >= self.current_pattern.len() {
                 self.debug_msg = format!("New pattern!");
-                self.add_to_pattern(1);
+                //self.add_to_pattern(1);
+                Simon::add_to_pattern(&mut self.current_pattern, 1);
 
                 self.mode = GameMode::Preparing;
             } 

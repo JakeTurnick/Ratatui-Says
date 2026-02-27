@@ -37,7 +37,9 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // Create & Start simon App
     let mut simon = Simon::new();
-    simon.add_to_pattern(4); // Start with 4 colors
+    //simon.add_to_pattern(4); // Old way: method
+    // new way: Associated function only borrows the current pattern, allowing the rest of the simon instance to be borrowed
+    Simon::add_to_pattern(&mut simon.current_pattern, 4);
     
     let res = run_app(&mut terminal, &mut simon);
 
