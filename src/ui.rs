@@ -1,17 +1,66 @@
 use ratatui::{
-    layout::{Constraint, Direction, Layout},
-    style::{Color, Style},
-    text::Text,
-    widgets::{Block, Borders, BorderType, Paragraph, Padding},
-    Frame,
+    Frame, layout::{Constraint, Direction, Layout}, style::{Color, Style, Stylize}, symbols::pixel, text::{Line, Span, Text}, widgets::{Block, BorderType, Borders, Padding, Paragraph}
 };
-
+use tui_big_text::{BigText, PixelSize};
 use crate::app::{
     Simon, 
+    Scene,
     Colors as Game_Colors,
 };
 
 pub fn ui(frame: &mut Frame, simon: &mut Simon) {
+    match &simon.app_state.current_scene {
+        Scene::MainMenu => { draw_main_menu(frame, simon);},
+        Scene::Game => { draw_game(frame, simon); }
+        Scene::Scores => {}
+    }
+}
+
+fn draw_main_menu(frame: &mut Frame, simon: &mut Simon) {
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Min(6),
+            Constraint::Min(6)
+        ])
+        .split(frame.area());
+
+    let title_block = Block::default()
+        .borders(Borders::ALL)
+        .style(Style::default());
+
+    let says_line = Line::from(vec![
+        Span::raw("Simon "),
+        "S".red().bold(),
+        "A".yellow().bold(),
+        "Y".green().bold(),
+        "S".blue().bold(),
+    ]);
+
+    /*  Would like to do this but currently always selects HalfWidth
+        not critical, return to this later
+    
+    let pixel_size: PixelSize;
+    if frame.area().x > 5 {
+        pixel_size = PixelSize::Full
+    } else {
+        pixel_size = PixelSize::HalfWidth
+    }; */
+    
+    let big_title = BigText::builder()
+        .pixel_size(PixelSize::Full)
+        .lines(vec![
+            says_line
+        ])
+        .centered()
+        .build();
+
+    // Todo: Add list with items to select Play / Scores
+
+    frame.render_widget(big_title, chunks[0]);
+}
+
+fn draw_game(frame: &mut Frame, simon: &mut Simon) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([

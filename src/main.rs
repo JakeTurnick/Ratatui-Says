@@ -119,7 +119,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
             GameEvent::Tick => {
                 simon.show_pattern(); 
 
-                terminal.draw(|f| ui(f, simon))?;
+                let _ = terminal.draw(|f| ui(f, simon));
             }
         }
     }
