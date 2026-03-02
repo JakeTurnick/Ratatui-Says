@@ -95,7 +95,13 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
                 match event {
                     Event::Key(key) => {
                         // Exit game
-                        if key.code == KeyCode::Esc { return Ok(()); }
+                        match key.code {
+                            KeyCode::Esc => { return Ok(()); }
+                            KeyCode::Right => { simon.select_next_list_item(); }
+                            KeyCode::Left => { simon.select_previous_list_item(); }
+                            _ => {}
+                        }
+                        
                     }
                     Event::Mouse(mouse) => {
                         simon.game_state.mouse_pos = (mouse.column, mouse.row);

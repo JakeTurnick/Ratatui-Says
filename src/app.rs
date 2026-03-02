@@ -5,7 +5,8 @@ use std::{
 };
 use ratatui::{
     layout::Rect,
-    crossterm::event
+    crossterm::event,
+    widgets::{ListState}
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -50,14 +51,49 @@ pub enum Scene {
     Scores
 }
 
+pub struct MenuItem {
+    pub name: &'static str,
+    pub scene: Scene
+}
+
+impl MenuItem {
+    fn new(name: &'static str, scene: Scene) -> MenuItem {
+        MenuItem {
+            name,
+            scene
+        }
+    }
+}
+
+pub struct MenuList {
+    pub items: Vec<MenuItem>,
+    pub state: ListState
+}
+
+impl FromIterator<(&'static str, Scene)> for MenuList {
+    fn from_iter<T: IntoIterator<Item = (&'static str, Scene)>>(iter: T) -> Self {
+        let items = iter
+            .into_iter()
+            .map(|(name, scene)| MenuItem::new(name, scene))
+            .collect();
+        let state = ListState::default();
+        Self { items, state }
+    }
+}
+
 pub struct AppState {
-    pub current_scene: Scene
+    pub current_scene: Scene,
+    pub menu_list: MenuList
 }
 
 impl AppState {
     fn new() -> AppState {
         AppState {
-        current_scene: Scene::MainMenu
+        current_scene: Scene::MainMenu,
+        menu_list: MenuList::from_iter([
+            ("Play", Scene::Game),
+            ("Scores", Scene::Scores)
+        ])
         }
     }
 }
@@ -179,6 +215,26 @@ impl Simon {
             self.debug_msg = format!("Wrong Guess - Game over!");
             self.mode = GameMode::GameOver;
         }
+    }
+
+    // List functions
+
+    pub fn select_next_list_item(&mut self) {
+        if self.app_state.menu_list.state.selected().unwrap_or(0) >= self.app_state.menu_list.items.len() - 1 {
+            self.app_state.menu_list.state.select_first();
+        } else {
+            self.app_state.menu_list.state.select_next();
+        }
+        
+    }
+
+    pub fn select_previous_list_item(&mut self) {
+        if self.app_state.menu_list.state.selected() == 0.into() {
+            self.app_state.menu_list.state.select_last();
+        } else {
+            self.app_state.menu_list.state.select_previous();
+        }
+        
     }
 
 }

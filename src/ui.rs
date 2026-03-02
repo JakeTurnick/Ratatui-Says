@@ -1,11 +1,24 @@
 use ratatui::{
-    Frame, layout::{Constraint, Direction, Layout}, style::{Color, Style, Stylize}, symbols::pixel, text::{Line, Span, Text}, widgets::{Block, BorderType, Borders, Padding, Paragraph}
+    Frame, 
+    layout::{
+        Constraint, Direction, Layout
+    }, 
+    style::{
+        Color, Style, Stylize
+    }, 
+    text::{
+        Line, Span, Text
+    }, 
+    widgets::{
+        Block, BorderType, Borders, Padding, Paragraph, List, ListItem, HighlightSpacing
+    }
 };
 use tui_big_text::{BigText, PixelSize};
 use crate::app::{
     Simon, 
     Scene,
     Colors as Game_Colors,
+    MenuList
 };
 
 pub fn ui(frame: &mut Frame, simon: &mut Simon) {
@@ -58,6 +71,31 @@ fn draw_main_menu(frame: &mut Frame, simon: &mut Simon) {
     // Todo: Add list with items to select Play / Scores
 
     frame.render_widget(big_title, chunks[0]);
+
+    let menu_block = Block::default()
+        .borders(Borders::ALL)
+        .style(Style::default());
+
+
+    let menu_items: Vec<ListItem> = simon.app_state.menu_list.items
+            .iter()
+            .enumerate()
+            .map(|(i, menu_item)| {
+                //let color = alternate_colors(i);
+                ListItem::from(menu_item.name)//.bg(color)
+            })
+            .collect();
+    let menu_list = List::new(menu_items)
+        .block(menu_block)
+        .highlight_symbol(">")
+        .highlight_spacing(HighlightSpacing::Always);
+
+    frame.render_stateful_widget(
+        menu_list, 
+        chunks[1].centered(Constraint::Percentage(50), Constraint::Percentage(50)), 
+        &mut simon.app_state.menu_list.state
+    );
+    //frame.render_widget(menu_list, chunks[1].centered(Constraint::Percentage(50), Constraint::Percentage(50)));
 }
 
 fn draw_game(frame: &mut Frame, simon: &mut Simon) {
