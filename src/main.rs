@@ -99,6 +99,14 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
                             KeyCode::Esc => { return Ok(()); }
                             KeyCode::Right => { simon.select_next_list_item(); }
                             KeyCode::Left => { simon.select_previous_list_item(); }
+                            KeyCode::Enter => {
+                                if let Some(selection) = simon.app_state.menu_list.state.selected() {
+                                    let selected_scene = simon.app_state.menu_list.items[selection].scene;
+                                    simon.app_state.change_scene(selected_scene);
+                                } else {println!("no item");}
+                                
+                                
+                            }
                             _ => {}
                         }
                         

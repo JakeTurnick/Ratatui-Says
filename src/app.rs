@@ -45,12 +45,14 @@ pub enum GameEvent {
     Tick
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum Scene {
     MainMenu,
     Game,
     Scores
 }
 
+#[derive(Debug)]
 pub struct MenuItem {
     pub name: &'static str,
     pub scene: Scene
@@ -94,6 +96,14 @@ impl AppState {
             ("Play", Scene::Game),
             ("Scores", Scene::Scores)
         ])
+        }
+    }
+
+    pub fn change_scene(&mut self, scene: Scene) {
+        match scene {
+            Scene::Game => { self.current_scene = Scene::Game }
+            Scene::MainMenu => { self.current_scene = Scene::MainMenu }
+            Scene::Scores => { self.current_scene = Scene::Scores}
         }
     }
 }
