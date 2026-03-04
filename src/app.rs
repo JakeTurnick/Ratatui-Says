@@ -8,6 +8,9 @@ use ratatui::{
     crossterm::event,
     widgets::{ListState}
 };
+use serde::{Serialize, Deserialize};
+use std::path::PathBuf;
+use std::fs;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Colors {
@@ -135,6 +138,93 @@ pub enum GameMode {
 // Should hold overarchin state and info
 // TODO - move game state & logic into game_state
 // ^-- GOAL: start new game with `simon.game_state = GameState::new()`
+
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ScoreItem {
+    pub score: usize,
+    pub name: String
+}
+
+impl ScoreItem {
+    fn new(name: String, score: usize) -> Self {
+        ScoreItem {
+            name,
+            score
+        }
+    }
+}
+
+pub struct ScoreList {
+    pub scores: Vec<ScoreItem>,
+    pub state: ListState
+}
+
+impl FromIterator<(String, usize)> for ScoreList {
+    fn from_iter<T: IntoIterator<Item = (String, usize)>>(iter: T) -> Self {
+        let scores = iter
+            .into_iter()
+            .map(|(name, score)| ScoreItem::new(name, score))
+            .collect();
+        let state = ListState::default();
+        Self { scores, state }
+    }
+}
+
+pub struct ScoreState {
+    score_list: ScoreList,
+    path: PathBuf
+}
+
+impl ScoreState {
+    fn new() -> Self {
+        let path = Self::get_app_path(); // Logic is now internal
+        let mut initial_scores = Vec::new();
+
+        if let Ok(data) = fs::read_to_string(&path) {
+            if let Ok(decoded) = serde_json::from_str::<Vec<ScoreItem>>(&data) {
+                initial_scores = decoded;
+            }
+        }
+
+        let dummy_list = ScoreList::from_iter([
+            (String::from("AAA"), 1),
+            (String::from("BBB"), 2),
+            (String::from("CCC"), 3),
+            (String::from("DDD"), 4),
+        ]);
+
+        let mut instance = Self {
+            score_list: dummy_list,
+            path,
+        };
+
+        /* let mut instance = Self {
+            score_list: ScoreList {
+                scores: initial_scores,
+                state: ListState::default(),
+            },
+            path,
+        }; */
+        
+        instance.sort_scores();
+        instance
+    }
+
+    fn sort_scores(&mut self) {
+        // Sort descending: highest scores first
+        self.score_list.scores.sort_by(|a, b| b.score.cmp(&a.score));
+    }
+
+    fn get_app_path() -> PathBuf {
+        use directories::ProjectDirs;
+        ProjectDirs::from("com", "yourname", "simon_game")
+            .map(|proj| proj.data_dir().join("scores.json"))
+            .expect("Could not determine save directory")
+    }
+}
+
+
 pub struct Simon {
     pub current_pattern: Vec<Colors>,
     pub step_index: usize,          // index of current_pattern
@@ -142,6 +232,7 @@ pub struct Simon {
     pub mode: GameMode,
     pub game_state: GameState,
     pub app_state: AppState,
+    pub score_state: ScoreState,
     pub debug_msg: String,
 }
 
@@ -154,6 +245,7 @@ impl Simon {
             mode: GameMode::Preparing,
             game_state: GameState::new(),
             app_state: AppState::new(),
+            score_state: ScoreState::new(),
             debug_msg: String::from("debug")
         }
     }
