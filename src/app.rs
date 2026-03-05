@@ -172,7 +172,7 @@ impl FromIterator<(String, usize)> for ScoreList {
 }
 
 pub struct ScoreState {
-    score_list: ScoreList,
+    pub score_list: ScoreList,
     path: PathBuf
 }
 

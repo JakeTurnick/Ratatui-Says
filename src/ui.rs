@@ -17,15 +17,14 @@ use tui_big_text::{BigText, PixelSize};
 use crate::app::{
     Simon, 
     Scene,
-    Colors as Game_Colors,
-    MenuList
+    Colors as Game_Colors
 };
 
 pub fn ui(frame: &mut Frame, simon: &mut Simon) {
     match &simon.app_state.current_scene {
         Scene::MainMenu => { draw_main_menu(frame, simon);},
         Scene::Game => { draw_game(frame, simon); }
-        Scene::Scores => {}
+        Scene::Scores => { draw_score(frame, simon);}
     }
 }
 
@@ -37,10 +36,6 @@ fn draw_main_menu(frame: &mut Frame, simon: &mut Simon) {
             Constraint::Min(6)
         ])
         .split(frame.area());
-
-    let title_block = Block::default()
-        .borders(Borders::ALL)
-        .style(Style::default());
 
     let says_line = Line::from(vec![
         Span::raw("Simon "),
@@ -80,7 +75,7 @@ fn draw_main_menu(frame: &mut Frame, simon: &mut Simon) {
     let menu_items: Vec<ListItem> = simon.app_state.menu_list.items
             .iter()
             .enumerate()
-            .map(|(i, menu_item)| {
+            .map(|(_i, menu_item)| {
                 //let color = alternate_colors(i);
                 ListItem::from(menu_item.name)//.bg(color)
             })
@@ -248,5 +243,59 @@ fn draw_game(frame: &mut Frame, simon: &mut Simon) {
 
     /* TODO - REMOVE DEBUG TITLE */
 
+
+}
+
+fn draw_score(frame: &mut Frame, simon: &mut Simon) {
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(3),
+            Constraint::Min(6)
+        ])
+        .split(frame.area());
+
+    let title_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage(25),
+            Constraint::Percentage(75)
+        ])
+        .split(chunks[0]);
+
+    let title_block = Block::default()
+            .borders(Borders::ALL)
+            .style(Style::default());
+
+    let title = Paragraph::new(Text::styled(
+        "Simon's Scores",
+        Style::default().fg(Color::White)
+    )).block(title_block);
+
+    frame.render_widget(title, title_chunks[0]);
+
+    let scores_block = Block::default()
+        .borders(Borders::ALL)
+        .style(Style::default());
+
+    let score_items: Vec<ListItem> = simon.score_state.score_list.scores
+        .iter()
+            .enumerate()
+            .map(|(_i, score)| {
+                //let color = alternate_colors(i);
+                ListItem::from(format!("{}  -  {}", score.name, score.score))//.bg(color)
+            })
+            .collect();
+
+    let scores_list = List::new(score_items)
+        .block(scores_block)
+        .highlight_symbol(">")
+        .highlight_spacing(HighlightSpacing::Always);
+
+    frame.render_stateful_widget(
+        scores_list, 
+        chunks[1], 
+        &mut simon.score_state.score_list.state
+    );
 
 }
