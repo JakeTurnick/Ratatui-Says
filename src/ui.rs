@@ -10,7 +10,7 @@ use ratatui::{
         Line, Span, Text
     }, 
     widgets::{
-        Block, BorderType, Borders, Padding, Paragraph, List, ListItem, HighlightSpacing
+        Block, BorderType, Borders, Clear, HighlightSpacing, List, ListItem, Padding, Paragraph, Widget
     }
 };
 use tui_big_text::{BigText, PixelSize};
@@ -22,10 +22,44 @@ use crate::app::{
 
 pub fn ui(frame: &mut Frame, simon: &mut Simon) {
     match &simon.app_state.current_scene {
-        Scene::MainMenu => { draw_main_menu(frame, simon);},
+        Scene::MainMenu => { draw_main_menu(frame, simon); },
         Scene::Game => { draw_game(frame, simon); }
         Scene::Scores => { draw_score(frame, simon);}
     }
+
+    draw_test_modal(frame, simon);
+}
+
+fn draw_test_modal(frame: &mut Frame, simon: &mut Simon) {
+    let modal_block = Block::default()
+        .borders(Borders::ALL)
+        .border_style(Style::default())
+        .style(Style::default()
+/*             .bg(Color::Black)
+            .fg(Color::White) */
+        )
+        .padding(Padding::new(1, 1, 1, 1)
+    );
+
+    let test_text = Paragraph::new(
+        Text::styled(
+            "test content", 
+            Style::default()
+        )
+    ).block(modal_block).centered();
+
+    draw_center_modal(frame, simon, test_text);
+}
+
+fn draw_center_modal<W: Widget>(frame: &mut Frame, simon: &mut Simon, widget: W) {
+    // No behind bleed-through, no need for background
+    frame.render_widget(Clear, frame.area().centered(
+        Constraint::Percentage(40), 
+        Constraint::Percentage(40)));
+
+    frame.render_widget(widget, frame.area().centered(
+        Constraint::Percentage(40), 
+        Constraint::Percentage(40)));
 }
 
 fn draw_main_menu(frame: &mut Frame, simon: &mut Simon) {
@@ -291,6 +325,7 @@ fn draw_score(frame: &mut Frame, simon: &mut Simon) {
         .block(scores_block)
         .highlight_symbol(">")
         .highlight_spacing(HighlightSpacing::Always);
+
 
     frame.render_stateful_widget(
         scores_list, 
