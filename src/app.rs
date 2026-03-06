@@ -48,7 +48,7 @@ pub enum GameEvent {
     Tick
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Scene {
     MainMenu,
     Game,
@@ -254,6 +254,10 @@ impl Simon {
     // plays pattern in step increments
     // returns to Awaiting_input
     pub fn show_pattern(&mut self) {
+
+        if self.app_state.current_scene != Scene::Game { 
+            return 
+        }
 
         match self.mode {
             GameMode::Preparing => {
