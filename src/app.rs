@@ -88,17 +88,19 @@ impl FromIterator<(&'static str, Scene)> for MenuList {
 
 pub struct AppState {
     pub current_scene: Scene,
-    pub menu_list: MenuList
+    pub menu_list: MenuList,
+    pub is_paused: bool
 }
 
 impl AppState {
     fn new() -> AppState {
         AppState {
-        current_scene: Scene::MainMenu,
-        menu_list: MenuList::from_iter([
-            ("Play", Scene::Game),
-            ("Scores", Scene::Scores)
-        ])
+            current_scene: Scene::MainMenu,
+            menu_list: MenuList::from_iter([
+                ("Play", Scene::Game),
+                ("Scores", Scene::Scores)
+            ]),
+            is_paused: false
         }
     }
 

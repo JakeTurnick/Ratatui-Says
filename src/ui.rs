@@ -10,7 +10,7 @@ use ratatui::{
         Line, Span, Text
     }, 
     widgets::{
-        Block, BorderType, Borders, Clear, HighlightSpacing, List, ListItem, Padding, Paragraph, Widget
+        Block, BorderType, Borders, Clear, HighlightSpacing, List, ListItem, ListState, Padding, Paragraph, StatefulWidget, Widget
     }
 };
 use tui_big_text::{BigText, PixelSize};
@@ -27,28 +27,53 @@ pub fn ui(frame: &mut Frame, simon: &mut Simon) {
         Scene::Scores => { draw_score(frame, simon);}
     }
 
-    draw_test_modal(frame, simon);
+    if simon.app_state.is_paused {
+        draw_test_modal(frame, simon);
+    }
+
+    
 }
 
 fn draw_test_modal(frame: &mut Frame, simon: &mut Simon) {
-    let modal_block = Block::default()
+    let menu_block = Block::default()
         .borders(Borders::ALL)
-        .border_style(Style::default())
-        .style(Style::default()
-/*             .bg(Color::Black)
-            .fg(Color::White) */
-        )
-        .padding(Padding::new(1, 1, 1, 1)
+        .style(Style::default());
+
+
+    let menu_items: Vec<ListItem> = simon.app_state.menu_list.items
+            .iter()
+            .enumerate()
+            .map(|(_i, menu_item)| {
+                //let color = alternate_colors(i);
+                ListItem::from(menu_item.name)//.bg(color)
+            })
+            .collect();
+    let menu_list = List::new(menu_items)
+        .block(menu_block)
+        .highlight_symbol(">")
+        .highlight_spacing(HighlightSpacing::Always);
+
+    /* frame.render_stateful_widget(
+        menu_list, 
+        chunks[1].centered(Constraint::Percentage(50), Constraint::Percentage(50)), 
+        &mut simon.app_state.menu_list.state
+    ); */
+
+    draw_stateful_center_modal(frame, menu_list, &mut simon.app_state.menu_list.state);
+}
+
+fn draw_stateful_center_modal<W, S>(frame: &mut Frame, widget: W, state: &mut S)
+    where W: StatefulWidget<State = S> {
+    // No behind bleed-through, no need for background
+    frame.render_widget(Clear, frame.area().centered(
+        Constraint::Percentage(40), 
+        Constraint::Percentage(40)));
+
+    frame.render_stateful_widget(widget, frame.area().centered(
+        Constraint::Percentage(40), 
+        Constraint::Percentage(40)),
+        state
     );
-
-    let test_text = Paragraph::new(
-        Text::styled(
-            "test content", 
-            Style::default()
-        )
-    ).block(modal_block).centered();
-
-    draw_center_modal(frame, simon, test_text);
 }
 
 fn draw_center_modal<W: Widget>(frame: &mut Frame, simon: &mut Simon, widget: W) {

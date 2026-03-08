@@ -104,9 +104,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
                                     let selected_scene = simon.app_state.menu_list.items[selection].scene;
                                     simon.app_state.change_scene(selected_scene);
                                 } else {println!("no item");}
-                                
-                                
                             }
+                            KeyCode::Char('q') => { simon.app_state.is_paused = !simon.app_state.is_paused }
                             _ => {}
                         }
                         
