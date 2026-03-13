@@ -10,31 +10,30 @@ use ratatui::{
         Line, Span, Text
     }, 
     widgets::{
-        Block, BorderType, Borders, Clear, HighlightSpacing, List, ListItem, ListState, Padding, Paragraph, StatefulWidget, Widget
+        Block, BorderType, Borders, Clear, HighlightSpacing, List, ListItem, Padding, Paragraph, StatefulWidget, Widget
     }
 };
 use tui_big_text::{BigText, PixelSize};
 use crate::app::{
-    Simon, 
-    Scene,
-    Colors as Game_Colors
+    Colors as Game_Colors, Scene, Simon
 };
 
 pub fn ui(frame: &mut Frame, simon: &mut Simon) {
     match &simon.app_state.current_scene {
-        Scene::MainMenu => { draw_main_menu(frame, simon); },
+        Scene::MainMenu => { draw_main_menu(frame, simon); }
         Scene::Game => { draw_game(frame, simon); }
         Scene::Scores => { draw_score(frame, simon);}
+        _ => {}
     }
 
     if simon.app_state.is_paused {
-        draw_test_modal(frame, simon);
+        draw_scene_modal(frame, simon);
     }
 
     
 }
 
-fn draw_test_modal(frame: &mut Frame, simon: &mut Simon) {
+fn draw_scene_modal(frame: &mut Frame, simon: &mut Simon) {
     let menu_block = Block::default()
         .borders(Borders::ALL)
         .style(Style::default());
@@ -53,12 +52,6 @@ fn draw_test_modal(frame: &mut Frame, simon: &mut Simon) {
         .highlight_symbol(">")
         .highlight_spacing(HighlightSpacing::Always);
 
-    /* frame.render_stateful_widget(
-        menu_list, 
-        chunks[1].centered(Constraint::Percentage(50), Constraint::Percentage(50)), 
-        &mut simon.app_state.menu_list.state
-    ); */
-
     draw_stateful_center_modal(frame, menu_list, &mut simon.app_state.menu_list.state);
 }
 
@@ -76,7 +69,7 @@ fn draw_stateful_center_modal<W, S>(frame: &mut Frame, widget: W, state: &mut S)
     );
 }
 
-fn draw_center_modal<W: Widget>(frame: &mut Frame, simon: &mut Simon, widget: W) {
+fn draw_center_modal<W: Widget>(frame: &mut Frame, widget: W) {
     // No behind bleed-through, no need for background
     frame.render_widget(Clear, frame.area().centered(
         Constraint::Percentage(40), 

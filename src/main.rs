@@ -19,8 +19,7 @@ mod app;
 mod ui;
 use crate::{
     app::{
-        Simon,
-        GameEvent,
+        GameEvent, Scene, Simon
     },
     ui::ui
 };
@@ -102,6 +101,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
                             KeyCode::Enter => {
                                 if let Some(selection) = simon.app_state.menu_list.state.selected() {
                                     let selected_scene = simon.app_state.menu_list.items[selection].scene;
+                                    
                                     simon.app_state.change_scene(selected_scene);
                                 } else {println!("no item");}
                             }
@@ -130,6 +130,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
                 }
             }
             GameEvent::Tick => {
+                if simon.app_state.current_scene == Scene::Exit { return Ok(()) }
+
                 simon.show_pattern(); 
 
                 let _ = terminal.draw(|f| ui(f, simon));

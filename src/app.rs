@@ -52,7 +52,8 @@ pub enum GameEvent {
 pub enum Scene {
     MainMenu,
     Game,
-    Scores
+    Scores,
+    Exit
 }
 
 #[derive(Debug)]
@@ -98,7 +99,8 @@ impl AppState {
             current_scene: Scene::MainMenu,
             menu_list: MenuList::from_iter([
                 ("Play", Scene::Game),
-                ("Scores", Scene::Scores)
+                ("Scores", Scene::Scores),
+                ("Exit game", Scene::Exit)
             ]),
             is_paused: false
         }
@@ -108,7 +110,8 @@ impl AppState {
         match scene {
             Scene::Game => { self.current_scene = Scene::Game }
             Scene::MainMenu => { self.current_scene = Scene::MainMenu }
-            Scene::Scores => { self.current_scene = Scene::Scores}
+            Scene::Scores => { self.current_scene = Scene::Scores }
+            Scene::Exit => { self.current_scene = Scene::Exit }
         }
     }
 }
