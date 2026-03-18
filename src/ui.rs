@@ -1,7 +1,7 @@
 use ratatui::{
     Frame, 
     layout::{
-        Constraint, Direction, Layout
+        Alignment, Constraint, Direction, Flex, Layout
     }, 
     style::{
         Color, Style, Stylize
@@ -15,7 +15,7 @@ use ratatui::{
 };
 use tui_big_text::{BigText, PixelSize};
 use crate::app::{
-    Colors as Game_Colors, Scene, Simon
+    Colors as Game_Colors, Scene, Simon, GameMode
 };
 
 pub fn ui(frame: &mut Frame, simon: &mut Simon) {
@@ -28,6 +28,9 @@ pub fn ui(frame: &mut Frame, simon: &mut Simon) {
 
     if simon.app_state.is_paused {
         draw_scene_modal(frame, simon);
+    }
+    if simon.mode == GameMode::GameOver {
+        draw_input_score_modal(frame, simon);
     }
 
     
@@ -53,6 +56,68 @@ fn draw_scene_modal(frame: &mut Frame, simon: &mut Simon) {
         .highlight_spacing(HighlightSpacing::Always);
 
     draw_stateful_center_modal(frame, menu_list, &mut simon.app_state.menu_list.state);
+}
+
+fn draw_input_score_modal(frame: &mut Frame, simon: &Simon ) {
+    frame.render_widget(Clear, frame.area().centered(
+        Constraint::Percentage(60), 
+        Constraint::Percentage(60)));
+
+    let center_area = frame.area().centered(
+        Constraint::Percentage(60), 
+        Constraint::Percentage(60));
+        
+    let modal_block = Block::default()
+        .padding(Padding { left: 2, right: 2, top: 2, bottom: 2 })
+        .borders(Borders::ALL)
+        .style(Style::default());
+    
+    let modal_area = modal_block.inner(center_area).clone();
+
+    let modal_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage(25),
+            Constraint::Percentage(25),
+            Constraint::Percentage(50),
+        ]).split(modal_area);
+
+    let title = Paragraph::new(Text::styled(
+        "Game over - Save score?", 
+        Style::default()
+    ))
+    .alignment(Alignment::Center);
+    frame.render_widget(title, modal_chunks[0]);
+
+    let score_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage(50),
+            Constraint::Percentage(50)
+        ])
+        .flex(Flex::SpaceAround)
+        .split(modal_chunks[2]);
+
+    let name_input = Paragraph::new(Text::styled(
+        "TEST USER", 
+        Style::default()
+    )).alignment(Alignment::Center);;
+
+    let user_score = Paragraph::new(Text::styled(
+        simon.game_state.current_score.to_string(),
+        Style::default()
+    )).alignment(Alignment::Center);
+
+    frame.render_widget(name_input, score_chunks[0]);
+    frame.render_widget(user_score, score_chunks[1]);
+
+    
+
+
+    
+
+    //frame.render_widget()
+
 }
 
 fn draw_stateful_center_modal<W, S>(frame: &mut Frame, widget: W, state: &mut S)
