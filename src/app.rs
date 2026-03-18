@@ -120,6 +120,7 @@ pub struct GameState {
     pub shown_color: Option<Colors>,
     pub mouse_pos: (u16, u16),
     pub clickables: Vec<(Colors, Rect)>,
+    pub current_score: u16
 }
 
 impl GameState {
@@ -128,6 +129,7 @@ impl GameState {
             shown_color: None,
             mouse_pos: (0, 0),
             clickables: vec!(),
+            current_score: 0
         }
     }
 }
@@ -312,7 +314,9 @@ impl Simon {
             return;
         }
         if color == self.current_pattern[self.step_index] {
-            self.debug_msg = format!("Correct guess! {} - (Step, Len) ({}, {})", color, self.step_index, self.current_pattern.len());
+            self.game_state.current_score += 1;
+            self.debug_msg = format!("Correct! Score: {}", self.game_state.current_score);
+            
             self.step_index += 1;
 
             if self.step_index >= self.current_pattern.len() {
