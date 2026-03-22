@@ -90,7 +90,8 @@ impl FromIterator<(&'static str, Scene)> for MenuList {
 pub struct AppState {
     pub current_scene: Scene,
     pub menu_list: MenuList,
-    pub is_paused: bool
+    pub is_paused: bool,
+    pub enable_text_entry: bool
 }
 
 impl AppState {
@@ -102,7 +103,8 @@ impl AppState {
                 ("Scores", Scene::Scores),
                 ("Exit game", Scene::Exit)
             ]),
-            is_paused: false
+            is_paused: false,
+            enable_text_entry: false
         }
     }
 
@@ -180,6 +182,8 @@ impl FromIterator<(String, usize)> for ScoreList {
 
 pub struct ScoreState {
     pub score_list: ScoreList,
+    pub new_score_name: String,
+    pub max_name_length: u8,
     path: PathBuf
 }
 
@@ -203,6 +207,8 @@ impl ScoreState {
 
         let mut instance = Self {
             score_list: dummy_list,
+            new_score_name: String::new(),
+            max_name_length: 8,
             path,
         };
 

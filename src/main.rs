@@ -1,6 +1,5 @@
 use std::{
-    error::Error, io, time::{Duration, Instant},
-    sync::mpsc,
+    any::Any, error::Error, io, sync::mpsc, time::{Duration, Instant}
 };
 
 use ratatui::{
@@ -105,7 +104,26 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
                                     simon.app_state.change_scene(selected_scene);
                                 } else {println!("no item");}
                             }
-                            KeyCode::Char('q') => { simon.app_state.is_paused = !simon.app_state.is_paused }
+                            // ToDo: Delete text_entry toggle - this should only toggle during score entry
+                            KeyCode::Tab => { simon.app_state.enable_text_entry = !simon.app_state.enable_text_entry }
+                            KeyCode::Backspace => {
+                                if !simon.app_state.enable_text_entry { /* no action while not typing */ }
+                                else { simon.score_state.new_score_name.pop(); }
+                            }
+                            KeyCode::Char(c) =>  {
+                                if !simon.app_state.enable_text_entry {
+                                    /* char commands */
+                                    match c {
+                                        'q' => { simon.app_state.is_paused = !simon.app_state.is_paused }
+                                        _ => {}
+                                    }
+                                } else {
+                                    /* raw text input */
+                                    if simon.score_state.new_score_name.len() >= simon.score_state.max_name_length.into() {
+                                        continue; // name is too long!
+                                    } else { simon.score_state.new_score_name.push(c); }
+                                }
+                            }
                             _ => {}
                         }
                         
