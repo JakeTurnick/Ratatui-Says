@@ -333,8 +333,9 @@ impl Simon {
                 self.mode = GameMode::Preparing;
             } 
         } else {
-            self.debug_msg = format!("Wrong Guess - Game over!");
+            self.debug_msg = String::new();
             self.mode = GameMode::GameOver;
+            self.app_state.enable_text_entry = true;
         }
     }
 

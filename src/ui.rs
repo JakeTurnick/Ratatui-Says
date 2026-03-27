@@ -77,9 +77,10 @@ fn draw_input_score_modal(frame: &mut Frame, simon: &Simon ) {
     let modal_chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Percentage(25),
-            Constraint::Percentage(25),
-            Constraint::Percentage(50),
+            Constraint::Percentage(15),
+            Constraint::Percentage(55),
+            Constraint::Percentage(15),
+            Constraint::Percentage(15),
         ]).split(modal_area);
 
     let title = Paragraph::new(Text::styled(
@@ -96,12 +97,18 @@ fn draw_input_score_modal(frame: &mut Frame, simon: &Simon ) {
             Constraint::Percentage(50)
         ])
         .flex(Flex::SpaceAround)
-        .split(modal_chunks[2]);
+        .split(modal_chunks[1]);
+
+    let mut formatted_name: String = simon.score_state.new_score_name.clone();
+    for _c in 1..=(8 - formatted_name.len()) {
+        formatted_name.push('_');
+    }
 
     let name_input = Paragraph::new(Text::styled(
-        "TEST USER", 
+        //&simon.score_state.new_score_name, 
+        formatted_name,
         Style::default()
-    )).alignment(Alignment::Center);;
+    )).alignment(Alignment::Center);
 
     let user_score = Paragraph::new(Text::styled(
         simon.game_state.current_score.to_string(),
@@ -111,13 +118,19 @@ fn draw_input_score_modal(frame: &mut Frame, simon: &Simon ) {
     frame.render_widget(name_input, score_chunks[0]);
     frame.render_widget(user_score, score_chunks[1]);
 
-    
+    let debug_msg = Paragraph::new(Text::styled(
+        &simon.debug_msg,
+        Style::default()
+    )).alignment(Alignment::Center);
 
+    frame.render_widget(debug_msg, modal_chunks[2]);
 
-    
+    let save_msg = Paragraph::new(Text::styled(
+        "Press enter to save", 
+        Style::default())
+    ).alignment(Alignment::Center);
 
-    //frame.render_widget()
-
+    frame.render_widget(save_msg, modal_chunks[3]);
 }
 
 fn draw_stateful_center_modal<W, S>(frame: &mut Frame, widget: W, state: &mut S)

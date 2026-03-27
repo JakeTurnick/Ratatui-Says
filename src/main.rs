@@ -18,7 +18,7 @@ mod app;
 mod ui;
 use crate::{
     app::{
-        GameEvent, Scene, Simon
+        GameEvent, GameMode, Scene, Simon
     },
     ui::ui
 };
@@ -95,9 +95,12 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
                         // Exit game
                         match key.code {
                             KeyCode::Esc => { return Ok(()); }
-                            KeyCode::Right => { simon.select_next_list_item(); }
-                            KeyCode::Left => { simon.select_previous_list_item(); }
+                            KeyCode::Right | KeyCode::Down => { simon.select_next_list_item(); }
+                            KeyCode::Left | KeyCode::Up => { simon.select_previous_list_item(); }
                             KeyCode::Enter => {
+                                if simon.mode == GameMode::GameOver {
+
+                                }
                                 if let Some(selection) = simon.app_state.menu_list.state.selected() {
                                     let selected_scene = simon.app_state.menu_list.items[selection].scene;
                                     
