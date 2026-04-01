@@ -102,7 +102,16 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
                                     // save user name and exit
                                     let name = mem::take(&mut simon.score_state.new_score_name);
                                     let score = mem::take(&mut simon.game_state.current_score);
-                                    simon.score_state.save_score(name, score);
+
+                                    if simon.score_state.is_name_new(&name) {
+                                        simon.score_state.save_score(name, score);
+                                        simon.debug_msg = String::new();
+                                        simon.app_state.change_scene(Scene::MainMenu);
+                                        simon.mode = GameMode::Preparing;
+                                    } else {
+                                        simon.debug_msg = String::from("That name is already taken");
+                                    }
+                                    
                                     // GameState::new() // reset the game
                                     continue;
                                 }

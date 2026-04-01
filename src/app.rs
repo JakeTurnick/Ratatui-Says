@@ -247,6 +247,15 @@ impl ScoreState {
 
         let _write_result = fs::write(&path, json_content);
     }
+
+    pub fn is_name_new(&self, new_name: &String) -> bool {
+        for score in &self.score_list.scores {
+            if &score.name == new_name {
+                return false
+            }
+        }
+        return true
+    }
 }
 
 
