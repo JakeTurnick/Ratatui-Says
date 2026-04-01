@@ -1,7 +1,6 @@
 use rand;
 use std::{
-    fmt, 
-    time::{Duration, Instant},
+    fmt, fs::{self, create_dir_all}, path::PathBuf, time::{Duration, Instant}
 };
 use ratatui::{
     layout::Rect,
@@ -9,8 +8,7 @@ use ratatui::{
     widgets::{ListState}
 };
 use serde::{Serialize, Deserialize};
-use std::path::PathBuf;
-use std::fs;
+
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Colors {
@@ -122,7 +120,7 @@ pub struct GameState {
     pub shown_color: Option<Colors>,
     pub mouse_pos: (u16, u16),
     pub clickables: Vec<(Colors, Rect)>,
-    pub current_score: u16
+    pub current_score: u8
 }
 
 impl GameState {
@@ -151,12 +149,12 @@ pub enum GameMode {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ScoreItem {
-    pub score: usize,
+    pub score: u8,
     pub name: String
 }
 
 impl ScoreItem {
-    fn new(name: String, score: usize) -> Self {
+    fn new(name: String, score: u8) -> Self {
         ScoreItem {
             name,
             score
@@ -169,8 +167,8 @@ pub struct ScoreList {
     pub state: ListState
 }
 
-impl FromIterator<(String, usize)> for ScoreList {
-    fn from_iter<T: IntoIterator<Item = (String, usize)>>(iter: T) -> Self {
+impl FromIterator<(String, u8)> for ScoreList {
+    fn from_iter<T: IntoIterator<Item = (String, u8)>>(iter: T) -> Self {
         let scores = iter
             .into_iter()
             .map(|(name, score)| ScoreItem::new(name, score))
@@ -184,42 +182,36 @@ pub struct ScoreState {
     pub score_list: ScoreList,
     pub new_score_name: String,
     pub max_name_length: u8,
-    path: PathBuf
 }
 
 impl ScoreState {
     fn new() -> Self {
-        let path = Self::get_app_path(); // Logic is now internal
+        let path = Self::get_app_path();
         let mut initial_scores = Vec::new();
 
-        if let Ok(data) = fs::read_to_string(&path) {
-            if let Ok(decoded) = serde_json::from_str::<Vec<ScoreItem>>(&data) {
-                initial_scores = decoded;
+        let raw_read = fs::read_to_string(&path);
+
+        match raw_read {
+            Ok(data) => {
+                if let Ok(decoded) = serde_json::from_str::<Vec<ScoreItem>>(&data) {
+                    initial_scores = decoded;
+                }
+            },
+            Err(err) => {
+                eprintln!("Error: {:?}", err);
+
             }
         }
 
-        let dummy_list = ScoreList::from_iter([
-            (String::from("AAA"), 1),
-            (String::from("BBB"), 2),
-            (String::from("CCC"), 3),
-            (String::from("DDD"), 4),
-        ]);
-
         let mut instance = Self {
-            score_list: dummy_list,
-            new_score_name: String::new(),
-            max_name_length: 8,
-            path,
-        };
-
-        /* let mut instance = Self {
             score_list: ScoreList {
                 scores: initial_scores,
                 state: ListState::default(),
             },
-            path,
-        }; */
-        
+            new_score_name: String::new(),
+            max_name_length: 8,
+        };
+
         instance.sort_scores();
         instance
     }
@@ -231,9 +223,29 @@ impl ScoreState {
 
     fn get_app_path() -> PathBuf {
         use directories::ProjectDirs;
-        ProjectDirs::from("com", "yourname", "simon_game")
-            .map(|proj| proj.data_dir().join("scores.json"))
-            .expect("Could not determine save directory")
+        let mut path = ProjectDirs::from("com", "yourname", "simon_game")
+            .map(|proj| proj.data_dir().join("data"))
+            .expect("Could not determine save directory");
+
+        create_dir_all(&path).expect("Could not create save directory");
+
+        let _ = path.push("scores.json");
+
+        //let _file = fs::File::create(&path).expect("Could not create file or open scores.json");
+
+        path
+    }
+
+    pub fn save_score(&mut self, name: String, score: u8) {
+        let new_score = ScoreItem::new(name, score);
+
+        self.score_list.scores.push(new_score);
+        self.sort_scores();
+
+        let path = Self::get_app_path();
+        let json_content = serde_json::to_string_pretty(&self.score_list.scores).expect("Scores should convert to string from Vec<String, u8>");
+
+        let _write_result = fs::write(&path, json_content);
     }
 }
 

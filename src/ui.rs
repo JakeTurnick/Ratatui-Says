@@ -147,7 +147,7 @@ fn draw_stateful_center_modal<W, S>(frame: &mut Frame, widget: W, state: &mut S)
     );
 }
 
-fn draw_center_modal<W: Widget>(frame: &mut Frame, widget: W) {
+fn _draw_center_modal<W: Widget>(frame: &mut Frame, widget: W) {
     // No behind bleed-through, no need for background
     frame.render_widget(Clear, frame.area().centered(
         Constraint::Percentage(40), 

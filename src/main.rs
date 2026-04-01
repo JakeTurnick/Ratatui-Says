@@ -1,5 +1,5 @@
 use std::{
-    any::Any, error::Error, io, sync::mpsc, time::{Duration, Instant}
+    error::Error, io, sync::mpsc, time::{Duration, Instant}, mem
 };
 
 use ratatui::{
@@ -38,7 +38,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     //simon.add_to_pattern(4); // Old way: method
     // new way: Associated function only borrows the current pattern, allowing the rest of the simon instance to be borrowed
     Simon::add_to_pattern(&mut simon.current_pattern, 4);
-    
+
     let res = run_app(&mut terminal, &mut simon);
 
     // Clean up terminal
@@ -99,7 +99,12 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
                             KeyCode::Left | KeyCode::Up => { simon.select_previous_list_item(); }
                             KeyCode::Enter => {
                                 if simon.mode == GameMode::GameOver {
-
+                                    // save user name and exit
+                                    let name = mem::take(&mut simon.score_state.new_score_name);
+                                    let score = mem::take(&mut simon.game_state.current_score);
+                                    simon.score_state.save_score(name, score);
+                                    // GameState::new() // reset the game
+                                    continue;
                                 }
                                 if let Some(selection) = simon.app_state.menu_list.state.selected() {
                                     let selected_scene = simon.app_state.menu_list.items[selection].scene;
