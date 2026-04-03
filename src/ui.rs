@@ -29,7 +29,7 @@ pub fn ui(frame: &mut Frame, simon: &mut Simon) {
     if simon.app_state.is_paused {
         draw_scene_modal(frame, simon);
     }
-    if simon.mode == GameMode::GameOver {
+    if simon.game_state.mode == GameMode::GameOver {
         draw_input_score_modal(frame, simon);
     }
 

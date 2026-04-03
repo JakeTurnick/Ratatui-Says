@@ -117,6 +117,7 @@ impl AppState {
 }
 
 pub struct GameState {
+    pub mode: GameMode,
     pub shown_color: Option<Colors>,
     pub mouse_pos: (u16, u16),
     pub clickables: Vec<(Colors, Rect)>,
@@ -126,6 +127,7 @@ pub struct GameState {
 impl GameState {
     pub fn new() -> GameState {
         GameState { 
+            mode: GameMode::Preparing,
             shown_color: None,
             mouse_pos: (0, 0),
             clickables: vec!(),
@@ -263,7 +265,6 @@ pub struct Simon {
     pub current_pattern: Vec<Colors>,
     pub step_index: usize,          // index of current_pattern
     pub last_step_time: Instant,    // color flash timings
-    pub mode: GameMode,
     pub game_state: GameState,
     pub app_state: AppState,
     pub score_state: ScoreState,
@@ -276,7 +277,6 @@ impl Simon {
             current_pattern: Vec::new(),
             step_index: 0,
             last_step_time: Instant::now(),
-            mode: GameMode::Preparing,
             game_state: GameState::new(),
             app_state: AppState::new(),
             score_state: ScoreState::new(),
@@ -293,11 +293,11 @@ impl Simon {
             return 
         }
 
-        match self.mode {
+        match self.game_state.mode {
             GameMode::Preparing => {
                 // wait 1 second, start the sequence
                 if self.last_step_time.elapsed() > Duration::from_millis(1000) {
-                    self.mode = GameMode::ShowingPattern;
+                    self.game_state.mode = GameMode::ShowingPattern;
                     self.step_index = 0;
                     self.last_step_time = Instant::now();
                 }
@@ -313,7 +313,7 @@ impl Simon {
 
                     // Reset to Player's turn
                     if self.step_index >= self.current_pattern.len() {
-                        self.mode = GameMode::AwaitingInput;
+                        self.game_state.mode = GameMode::AwaitingInput;
                         self.game_state.shown_color = None;
                         self.step_index = 0;
                     }
@@ -337,7 +337,7 @@ impl Simon {
     }
 
     pub fn handle_player_guess(&mut self, color: Colors) {
-        if self.mode != GameMode::AwaitingInput {
+        if self.game_state.mode != GameMode::AwaitingInput {
             return;
         }
         if color == self.current_pattern[self.step_index] {
@@ -351,11 +351,11 @@ impl Simon {
                 //self.add_to_pattern(1);
                 Simon::add_to_pattern(&mut self.current_pattern, 1);
 
-                self.mode = GameMode::Preparing;
+                self.game_state.mode = GameMode::Preparing;
             } 
         } else {
             self.debug_msg = String::new();
-            self.mode = GameMode::GameOver;
+            self.game_state.mode = GameMode::GameOver;
             self.app_state.enable_text_entry = true;
         }
     }

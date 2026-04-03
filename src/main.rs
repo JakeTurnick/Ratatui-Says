@@ -96,12 +96,12 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
                         match key.code {
                             KeyCode::Esc => { 
                                 simon.app_state.change_scene(Scene::MainMenu);
-                                simon.mode = GameMode::Preparing;
+                                simon.game_state.mode = GameMode::Preparing;
                             }
                             KeyCode::Right | KeyCode::Down => { simon.select_next_list_item(); }
                             KeyCode::Left | KeyCode::Up => { simon.select_previous_list_item(); }
                             KeyCode::Enter => {
-                                if simon.mode == GameMode::GameOver {
+                                if simon.game_state.mode == GameMode::GameOver {
                                     // save user name and exit
                                     let name = mem::take(&mut simon.score_state.new_score_name);
                                     let score = mem::take(&mut simon.game_state.current_score);
@@ -110,7 +110,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
                                         simon.score_state.save_score(name, score);
                                         simon.debug_msg = String::new();
                                         simon.app_state.change_scene(Scene::MainMenu);
-                                        simon.mode = GameMode::Preparing;
+                                        simon.game_state.mode = GameMode::Preparing;
                                     } else {
                                         simon.debug_msg = String::from("That name is already taken");
                                     }
