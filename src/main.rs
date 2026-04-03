@@ -94,7 +94,10 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
                     Event::Key(key) => {
                         // Exit game
                         match key.code {
-                            KeyCode::Esc => { return Ok(()); }
+                            KeyCode::Esc => { 
+                                simon.app_state.change_scene(Scene::MainMenu);
+                                simon.mode = GameMode::Preparing;
+                            }
                             KeyCode::Right | KeyCode::Down => { simon.select_next_list_item(); }
                             KeyCode::Left | KeyCode::Up => { simon.select_previous_list_item(); }
                             KeyCode::Enter => {
