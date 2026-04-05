@@ -3,9 +3,7 @@ use std::{
     fmt, fs::{self, create_dir_all}, path::PathBuf, time::{Duration, Instant}
 };
 use ratatui::{
-    layout::Rect,
-    crossterm::event,
-    widgets::{ListState}
+    crossterm::event::{self, KeyCode}, layout::Rect, widgets::ListState
 };
 use serde::{Serialize, Deserialize};
 
@@ -119,6 +117,7 @@ impl AppState {
 pub struct GameState {
     pub mode: GameMode,
     pub shown_color: Option<Colors>,
+    pub hovered_color: Option<Colors>,
     pub mouse_pos: (u16, u16),
     pub clickables: Vec<(Colors, Rect)>,
     pub current_score: u8
@@ -129,10 +128,18 @@ impl GameState {
         GameState { 
             mode: GameMode::Preparing,
             shown_color: None,
+            hovered_color: None,
             mouse_pos: (0, 0),
             clickables: vec!(),
             current_score: 0
         }
+    }
+
+    pub fn handle_hovered_color(&mut self, color: Colors) {
+        if self.mode != GameMode::AwaitingInput {
+            return;
+        }
+        self.hovered_color = Some(color);
     }
 }
 
@@ -334,6 +341,10 @@ impl Simon {
             let new_color = Colors::from_index(rand::random_range(0..=3)).expect("Random range should be within bounds of hard-coded enum");
             pattern.push(new_color);
         }
+    }
+
+    pub fn handle_keyboard_color_selection(&mut self, _direction: KeyCode) {
+        // Todo - handle keyboard events (need to change input scheme first)
     }
 
     pub fn handle_player_guess(&mut self, color: Colors) {

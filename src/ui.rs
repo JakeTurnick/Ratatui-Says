@@ -261,7 +261,7 @@ fn draw_game(frame: &mut Frame, simon: &mut Simon) {
     frame.render_widget(buttons_block, chunks[1]);
 
     let button_row_chunks = Layout::default()
-        .direction(Direction::Horizontal)
+        .direction(Direction::Vertical)
         .constraints([
             Constraint::Percentage(50),
             Constraint::Percentage(50)
@@ -269,7 +269,7 @@ fn draw_game(frame: &mut Frame, simon: &mut Simon) {
         .split(button_block_area);
 
     let button_top_chunks = Layout::default()
-        .direction(Direction::Vertical)
+        .direction(Direction::Horizontal)
         .constraints([
             Constraint::Percentage(50),
             Constraint::Percentage(50)
@@ -277,7 +277,7 @@ fn draw_game(frame: &mut Frame, simon: &mut Simon) {
         .split(button_row_chunks[0]);
 
     let button_bottom_chunks = Layout::default()
-        .direction(Direction::Vertical)
+        .direction(Direction::Horizontal)
         .constraints([
             Constraint::Percentage(50),
             Constraint::Percentage(50)
@@ -314,6 +314,27 @@ fn draw_game(frame: &mut Frame, simon: &mut Simon) {
             blue_border = selected_border;
         },
         None => {}
+    }
+
+    let hover_dot = Paragraph::new("●")
+        .alignment(Alignment::Center);
+
+    let target_chunk = match simon.game_state.hovered_color {
+        Some(Game_Colors::RED) => Some(button_top_chunks[0]),
+        Some(Game_Colors::YELLOW) => Some(button_top_chunks[1]),
+        Some(Game_Colors::GREEN) => Some(button_bottom_chunks[0]),
+        Some(Game_Colors::BLUE) => Some(button_bottom_chunks[1]),
+        None => None
+    };
+
+    if let Some(target) = target_chunk {
+        let hover_dot_block = Layout::default().constraints([
+            Constraint::Fill(1),
+            Constraint::Length(1),
+            Constraint::Fill(1)
+        ])
+        .split(target);
+        frame.render_widget(hover_dot, hover_dot_block[1])
     }
 
     let red_block = Block::default()
