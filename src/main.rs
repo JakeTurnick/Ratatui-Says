@@ -98,18 +98,18 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
                                 simon.app_state.change_scene(Scene::MainMenu);
                                 simon.game_state.mode = GameMode::Preparing;
                             }
-                            KeyCode::Up | KeyCode::Down | KeyCode::Left | KeyCode::Right
-                                if simon.app_state.current_scene == Scene::Game => {
-                                    simon.handle_keyboard_color_selection(key.code);
-                                }
-                            KeyCode::Right | KeyCode::Down => { simon.select_next_list_item(); }
-                            KeyCode::Left | KeyCode::Up => { simon.select_previous_list_item(); }
+                            // ToDo: Delete text_entry toggle - this should only toggle during score entry
+                            KeyCode::Tab => { simon.app_state.enable_text_entry = !simon.app_state.enable_text_entry }
+                            KeyCode::Backspace => {
+                                if !simon.app_state.enable_text_entry { continue; /* no action while not typing */ }
+                                else { simon.score_state.new_score_name.pop(); }
+                            }
                             KeyCode::Enter => {
                                 if simon.game_state.mode == GameMode::GameOver {
                                     // save user name and exit
                                     let name = mem::take(&mut simon.score_state.new_score_name);
                                     let score = mem::take(&mut simon.game_state.current_score);
-
+                                    
                                     if simon.score_state.is_name_new(&name) {
                                         simon.score_state.save_score(name, score);
                                         simon.debug_msg = String::new();
@@ -126,14 +126,14 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
                                     let selected_scene = simon.app_state.menu_list.items[selection].scene;
                                     
                                     simon.app_state.change_scene(selected_scene);
-                                } else {println!("no item");}
+                                } // else { println!("no item");}
                             }
-                            // ToDo: Delete text_entry toggle - this should only toggle during score entry
-                            KeyCode::Tab => { simon.app_state.enable_text_entry = !simon.app_state.enable_text_entry }
-                            KeyCode::Backspace => {
-                                if !simon.app_state.enable_text_entry { continue; /* no action while not typing */ }
-                                else { simon.score_state.new_score_name.pop(); }
-                            }
+                            KeyCode::Up | KeyCode::Down | KeyCode::Left | KeyCode::Right
+                                if simon.app_state.current_scene == Scene::Game => {
+                                    simon.handle_keyboard_color_selection(key.code);
+                                }
+                            KeyCode::Right | KeyCode::Down => { simon.select_next_list_item(); }
+                            KeyCode::Left | KeyCode::Up => { simon.select_previous_list_item(); }
                             KeyCode::Char(c) =>  {
                                 if !simon.app_state.enable_text_entry {
                                     /* char commands */
