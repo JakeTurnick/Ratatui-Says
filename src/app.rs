@@ -28,13 +28,22 @@ impl fmt::Display for Colors {
 }
 
 impl Colors {
-    fn from_index(index: usize) -> Option<Colors> {
+    fn from_index(index: u8) -> Option<Colors> {
         match index {
             0 => Some(Colors::RED),
             1 => Some(Colors::YELLOW),
             2 => Some(Colors::GREEN),
             3 => Some(Colors::BLUE),
             _ => None,
+        }
+    }
+
+    fn to_index(c: Colors) -> u8 {
+        match c {
+            Colors::RED => 0,
+            Colors::YELLOW => 1,
+            Colors::GREEN => 2,
+            Colors::BLUE => 3,
         }
     }
 }
@@ -322,6 +331,7 @@ impl Simon {
                     if self.step_index >= self.current_pattern.len() {
                         self.game_state.mode = GameMode::AwaitingInput;
                         self.game_state.shown_color = None;
+                        self.game_state.hovered_color = Some(Colors::RED);
                         self.step_index = 0;
                     }
                 } else if elapsed > Duration::from_millis(700) {
@@ -343,8 +353,36 @@ impl Simon {
         }
     }
 
-    pub fn handle_keyboard_color_selection(&mut self, _direction: KeyCode) {
-        // Todo - handle keyboard events (need to change input scheme first)
+    pub fn handle_keyboard_color_selection(&mut self, direction: KeyCode) {
+        if self.game_state.mode != GameMode::AwaitingInput { return }
+
+        const WIDTH: u8 = 2;
+
+        let mut row: u8 = 0;
+        let mut col: u8 = 0;
+        let mut index: u8 = 0;
+
+        if let Some(color) = self.game_state.hovered_color {
+            index = Colors::to_index(color);
+            row = index / WIDTH;
+            col = index % WIDTH;
+        }
+        
+        match direction {
+            KeyCode::Up | KeyCode::Char('w') => { row = row.saturating_sub(1); }
+            KeyCode::Down | KeyCode::Char('s') => { row = row.saturating_add(1); }
+            KeyCode::Left | KeyCode::Char('a') => { col = col.saturating_sub(1); }
+            KeyCode::Right | KeyCode::Char('d') => { col = col.saturating_add(1); }
+            _ => {}
+        }
+
+        row = row.clamp(0, 1);
+        col = col.clamp(0, 1);
+
+        index = (row * WIDTH) + col;
+
+        //self.debug_msg = format!("color index: {:?}", index);
+        self.game_state.hovered_color = Colors::from_index(index);
     }
 
     pub fn handle_player_guess(&mut self, color: Colors) {

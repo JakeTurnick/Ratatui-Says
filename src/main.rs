@@ -139,6 +139,10 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
                                     /* char commands */
                                     match c {
                                         'q' => { simon.app_state.is_paused = !simon.app_state.is_paused }
+                                        'w' => { simon.handle_keyboard_color_selection(key.code); }
+                                        'a' => { simon.handle_keyboard_color_selection(key.code); }
+                                        's' => { simon.handle_keyboard_color_selection(key.code); }
+                                        'd' => { simon.handle_keyboard_color_selection(key.code); }
                                         _ => {}
                                     }
                                 } else {
