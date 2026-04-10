@@ -18,7 +18,7 @@ mod app;
 mod ui;
 use crate::{
     app::{
-        GameEvent, GameMode, Scene, Simon
+        AppState, GameEvent, GameMode, Scene, Simon
     },
     ui::ui
 };
@@ -90,6 +90,59 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
     loop {
         match rx.recv().unwrap() {
             GameEvent::Input(event) => {
+                /* Which way is cleaner?
+                A) Match by Scene / Game state -> Match by Event (has code duplication)
+                B) Match by Event -> Filter by various Scenes/Game state (all code is together, kind of messy) 
+
+                match simon.app_state.current_scene {
+                    Scene::MainMenu => {}
+                    Scene::Game => {
+                        match event {
+                            Event::Key(key) => {
+                                match key.code {
+                                    KeyCode::Esc => { 
+                                        if simon.app_state.current_scene == Scene::MainMenu { return Ok(()) }
+                                            simon.app_state.change_scene(Scene::MainMenu);
+                                            simon.game_state.mode = GameMode::Preparing;
+                                        }
+                                    KeyCode::Up | KeyCode::Down | KeyCode::Left | KeyCode::Right => {
+                                        simon.handle_keyboard_color_selection(key.code);
+                                    }
+                                    KeyCode::Char(c) =>  {
+                                        if simon.game_state.mode != GameMode::GameOver {
+                                            /* char commands */
+                                            match c {
+                                                'q' => { simon.app_state.is_paused = !simon.app_state.is_paused } // replace with Esc & a real pause menu
+                                                'w' => { simon.handle_keyboard_color_selection(key.code); }
+                                                'a' => { simon.handle_keyboard_color_selection(key.code); }
+                                                's' => { simon.handle_keyboard_color_selection(key.code); }
+                                                'd' => { simon.handle_keyboard_color_selection(key.code); }
+                                                _ => {}
+                                            }
+                                        } else if simon.app_state.enable_text_entry {
+                                            /* raw text input */
+                                            if simon.score_state.new_score_name.len() >= simon.score_state.max_name_length.into() {
+                                                continue; // name is too long!
+                                            } else { simon.score_state.new_score_name.push(c); }
+                                        }
+                                    }
+                                    KeyCode::Backspace => {
+                                        if !simon.app_state.enable_text_entry { continue; } /* no action while not typing */ 
+                                        else { simon.score_state.new_score_name.pop(); }
+                                    }
+                                    _ => {}
+                                }
+                            }
+                            Event::Mouse(mouse) => {
+
+                            }
+                            _ => {}
+                        }
+                    }
+                    Scene::Scores => {}
+                    _ => {}
+                }
+                */
                 match event {
                     Event::Key(key) => {
                         match key.code {
