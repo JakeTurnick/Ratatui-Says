@@ -18,7 +18,7 @@ mod app;
 mod ui;
 use crate::{
     app::{
-        AppState, GameEvent, GameMode, Scene, Simon
+        GameEvent, GameMode, Scene, Simon
     },
     ui::ui
 };
@@ -146,15 +146,13 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
                 match event {
                     Event::Key(key) => {
                         match key.code {
-                            KeyCode::Esc => { 
-                                if simon.app_state.current_scene == Scene::MainMenu { return Ok(()) }
-                                simon.app_state.change_scene(Scene::MainMenu);
-                                simon.game_state.mode = GameMode::Preparing;
+                            KeyCode::Esc if simon.app_state.current_scene != Scene::MainMenu => { 
+                                simon.app_state.is_paused = !simon.app_state.is_paused;
                             }
                             // ToDo: Delete text_entry toggle - this should only toggle during score entry
                             KeyCode::Tab => { simon.app_state.enable_text_entry = !simon.app_state.enable_text_entry }
                             KeyCode::Backspace => {
-                                if !simon.app_state.enable_text_entry { continue; /* no action while not typing */ }
+                                if !simon.app_state.enable_text_entry { continue; } /* no action while not typing */
                                 else { simon.score_state.new_score_name.pop(); }
                             }
                             KeyCode::Enter => {
@@ -179,10 +177,13 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
                                     let selected_scene = simon.app_state.menu_list.items[selection].scene;
                                     
                                     simon.app_state.change_scene(selected_scene);
+                                    if simon.app_state.is_paused {
+                                        simon.app_state.is_paused = false;
+                                    }
                                 } // else { println!("no item");}
                             }
                             KeyCode::Up | KeyCode::Down | KeyCode::Left | KeyCode::Right
-                                if simon.app_state.current_scene == Scene::Game => {
+                                if simon.app_state.current_scene == Scene::Game && !simon.app_state.is_paused => {
                                     simon.handle_keyboard_color_selection(key.code);
                                 }
                             KeyCode::Right | KeyCode::Down => { simon.select_next_list_item(); }

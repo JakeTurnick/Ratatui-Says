@@ -41,7 +41,6 @@ fn draw_scene_modal(frame: &mut Frame, simon: &mut Simon) {
         .borders(Borders::ALL)
         .style(Style::default());
 
-
     let menu_items: Vec<ListItem> = simon.app_state.menu_list.items
             .iter()
             .enumerate()

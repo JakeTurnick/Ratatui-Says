@@ -106,7 +106,7 @@ impl AppState {
             menu_list: MenuList::from_iter([
                 ("Play", Scene::Game),
                 ("Scores", Scene::Scores),
-                ("Exit game", Scene::Exit)
+                ("Exit game", Scene::Exit),
             ]),
             is_paused: false,
             enable_text_entry: false
@@ -115,11 +115,21 @@ impl AppState {
 
     pub fn change_scene(&mut self, scene: Scene) {
         match scene {
-            Scene::Game => { self.current_scene = Scene::Game }
             Scene::MainMenu => { self.current_scene = Scene::MainMenu }
+            Scene::Game => { self.current_scene = Scene::Game }
             Scene::Scores => { self.current_scene = Scene::Scores }
             Scene::Exit => { self.current_scene = Scene::Exit }
         }
+
+        self.menu_list = MenuList::from_iter([
+                ("Main Menu", Scene::MainMenu),
+                ("Play", Scene::Game),
+                ("Scores", Scene::Scores),
+                ("Exit game", Scene::Exit),
+            ]);
+        self.menu_list.items.retain(|item| {
+            item.scene != scene
+        });
     }
 }
 
@@ -360,7 +370,7 @@ impl Simon {
 
         let mut row: u8 = 0;
         let mut col: u8 = 0;
-        let mut index: u8 = 0;
+        let mut index: u8;
 
         if let Some(color) = self.game_state.hovered_color {
             index = Colors::to_index(color);
