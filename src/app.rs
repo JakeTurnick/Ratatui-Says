@@ -87,7 +87,8 @@ impl FromIterator<(&'static str, Scene)> for MenuList {
             .into_iter()
             .map(|(name, scene)| MenuItem::new(name, scene))
             .collect();
-        let state = ListState::default();
+        let mut state = ListState::default();
+        state.select_first();
         Self { items, state }
     }
 }
