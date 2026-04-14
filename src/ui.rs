@@ -76,10 +76,11 @@ fn draw_input_score_modal(frame: &mut Frame, simon: &Simon ) {
     let modal_chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Percentage(15),
+            Constraint::Percentage(10),
             Constraint::Percentage(55),
-            Constraint::Percentage(15),
-            Constraint::Percentage(15),
+            Constraint::Percentage(10),
+            Constraint::Percentage(10),
+            Constraint::Percentage(10)
         ]).split(modal_area);
 
     let title = Paragraph::new(Text::styled(
@@ -130,6 +131,14 @@ fn draw_input_score_modal(frame: &mut Frame, simon: &Simon ) {
     ).alignment(Alignment::Center);
 
     frame.render_widget(save_msg, modal_chunks[3]);
+
+    let exit_msg = Paragraph::new(Text::styled(
+        "Esc - exit to main menu",
+        Style::default()
+
+    )).alignment(Alignment::Center);
+
+    frame.render_widget(exit_msg, modal_chunks[4]);
 }
 
 fn draw_stateful_center_modal<W, S>(frame: &mut Frame, widget: W, state: &mut S)

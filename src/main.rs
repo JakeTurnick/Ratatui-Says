@@ -146,8 +146,14 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
                 match event {
                     Event::Key(key) => {
                         match key.code {
-                            KeyCode::Esc if simon.app_state.current_scene != Scene::MainMenu => { 
-                                simon.app_state.is_paused = !simon.app_state.is_paused;
+                            KeyCode::Esc => {
+                                if simon.game_state.mode == GameMode::GameOver {
+                                    // Escape from score input
+                                    simon.game_state.mode = GameMode::Preparing; // should replace with GameState::new()
+                                    simon.app_state.change_scene(Scene::MainMenu);
+                                } else if simon.app_state.current_scene != Scene::MainMenu {
+                                    simon.app_state.is_paused = !simon.app_state.is_paused;
+                                }
                             }
                             // ToDo: Delete text_entry toggle - this should only toggle during score entry
                             KeyCode::Tab => { simon.app_state.enable_text_entry = !simon.app_state.enable_text_entry }
