@@ -319,6 +319,9 @@ impl Simon {
         if self.app_state.current_scene != Scene::Game { 
             return 
         }
+        if self.app_state.is_paused {
+            return
+        }
 
         match self.game_state.mode {
             GameMode::Preparing => {
