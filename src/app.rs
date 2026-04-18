@@ -326,6 +326,9 @@ impl Simon {
         match self.game_state.mode {
             GameMode::Preparing => {
                 // wait 1 second, start the sequence
+                if self.last_step_time.elapsed() > Duration::from_millis(200) {
+                    self.game_state.shown_color = None;
+                }
                 if self.last_step_time.elapsed() > Duration::from_millis(1000) {
                     self.game_state.mode = GameMode::ShowingPattern;
                     self.step_index = 0;
@@ -403,6 +406,8 @@ impl Simon {
         if self.game_state.mode != GameMode::AwaitingInput {
             return;
         }
+        self.game_state.shown_color = Some(color);
+        self.last_step_time = Instant::now();
         if color == self.current_pattern[self.step_index] {
             self.game_state.current_score += 1;
             self.debug_msg = format!("Correct! Score: {}", self.game_state.current_score);

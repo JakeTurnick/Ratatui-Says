@@ -251,7 +251,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
             }
             GameEvent::Tick => {
                 if simon.app_state.current_scene == Scene::Exit { return Ok(()) }
-
+                
+                clear_player_selected_color(simon);
                 simon.show_pattern(); 
 
                 let _ = terminal.draw(|f| ui(f, simon));
@@ -269,4 +270,12 @@ fn select_menu_item(simon: &mut Simon) {
             simon.app_state.is_paused = false;
         }
     }
+}
+
+fn clear_player_selected_color(simon: &mut Simon) {
+    if simon.game_state.mode == GameMode::AwaitingInput
+        && simon.game_state.shown_color != None
+        && simon.last_step_time.elapsed() > Duration::from_millis(200) {
+            simon.game_state.shown_color = None
+        }
 }
