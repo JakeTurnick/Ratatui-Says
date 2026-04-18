@@ -190,14 +190,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
                             KeyCode::Char(c) =>  {
                                 if !simon.app_state.enable_text_entry {
                                     /* char commands */
-                                    if simon.app_state.current_scene != Scene::Game {
-                                        if c.is_whitespace() { select_menu_item(simon); }
-                                        match c {
-                                            'w' | 'a' => { simon.select_previous_list_item(); }
-                                            's' | 'd' => { simon.select_next_list_item(); }
-                                            _ => {}
-                                        }
-                                    } else {
+                                    if simon.app_state.current_scene == Scene::Game && !simon.app_state.is_paused {
                                         if c.is_whitespace() { 
                                             if let Some(color) = simon.game_state.hovered_color {
                                                 simon.handle_player_guess(color);
@@ -209,6 +202,14 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
                                             }
                                             _ => {}
                                         }
+                                    } else {
+                                        if c.is_whitespace() { select_menu_item(simon); }
+                                        match c {
+                                            'w' | 'a' => { simon.select_previous_list_item(); }
+                                            's' | 'd' => { simon.select_next_list_item(); }
+                                            _ => {}
+                                        }
+                                        
                                     }
                                 } else {
                                     /* raw text input */
