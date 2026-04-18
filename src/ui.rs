@@ -1,7 +1,7 @@
 use ratatui::{
     Frame, 
     layout::{
-        Alignment, Constraint, Direction, Flex, Layout
+        Alignment, Constraint, Direction, Flex, Layout, Offset, Rect
     }, 
     style::{
         Color, Style, Stylize
@@ -10,7 +10,7 @@ use ratatui::{
         Line, Span, Text
     }, 
     widgets::{
-        Block, BorderType, Borders, Clear, HighlightSpacing, List, ListItem, Padding, Paragraph, StatefulWidget, Widget
+        Block, BorderType, Borders, Clear, HighlightSpacing, List, ListItem, Padding, Paragraph, StatefulWidget, Widget, Wrap
     }
 };
 use tui_big_text::{BigText, PixelSize};
@@ -36,8 +36,59 @@ pub fn ui(frame: &mut Frame, simon: &mut Simon) {
     
 }
 
+fn draw_controls_modal(frame: &mut Frame, target_area: Option<Rect>) {
+    /*
+    WASD / ↑←→↓ u+2190-3
+    Esc - pause / exit
+    Space / Enter select
+     */
+
+    let hor_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            //Constraint::Fill(1),
+            Constraint::Max(30)
+        ]).flex(Flex::End)
+        .split(frame.area());
+
+    let ver_chunks = Layout::default()
+        .constraints([
+            Constraint::Percentage(50)
+        ])
+        .flex(Flex::Center)
+        .split(hor_chunks[0]);
+
+    let msg_block = Block::default()
+        .borders(Borders::ALL)
+        .title(" Controls ")
+        .style(Style::default())
+        .padding(Padding { left: 1, right: 1, top: 0, bottom: 0});
+
+    let controls_msg = Paragraph::new(Text::styled(
+        "WASD / ↑←↓→ - Change Selection
+            \nSpace / Enter - Select
+            \nEsc - Pause / Exit
+        ",
+        Style::default()
+    ))
+        .wrap(Wrap { trim: false})
+        .block(msg_block);
+
+    if let Some(area) = target_area {
+        frame.render_widget(Clear, area);
+        frame.render_widget(controls_msg, area);
+    } else {
+        frame.render_widget(Clear, ver_chunks[0]);
+        frame.render_widget(controls_msg, ver_chunks[0]);
+    }
+    /* //.centered(
+        Constraint::Percentage(50), Constraint::Percentage(50)
+    ) */
+}
+
 fn draw_scene_modal(frame: &mut Frame, simon: &mut Simon) {
     let menu_block = Block::default()
+    .title(" Menu ")
         .borders(Borders::ALL)
         .style(Style::default());
 
@@ -54,7 +105,21 @@ fn draw_scene_modal(frame: &mut Frame, simon: &mut Simon) {
         .highlight_symbol(">")
         .highlight_spacing(HighlightSpacing::Always);
 
-    draw_stateful_center_modal(frame, menu_list, &mut simon.app_state.menu_list.state);
+    let split_menu_area = Layout::new(Direction::Horizontal, [
+            Constraint::Percentage(30),
+            Constraint::Percentage(50)
+        ]).split(frame.area().centered(Constraint::Percentage(70), Constraint::Percentage(40)));
+
+    frame.render_widget(Clear, split_menu_area[0]);
+    frame.render_widget(Clear, split_menu_area[1]);
+
+    frame.render_stateful_widget(
+        menu_list, 
+        split_menu_area[0],
+        &mut simon.app_state.menu_list.state 
+    );
+
+    draw_controls_modal(frame, Some(split_menu_area[1]));
 }
 
 fn draw_input_score_modal(frame: &mut Frame, simon: &Simon ) {
@@ -206,6 +271,7 @@ fn draw_main_menu(frame: &mut Frame, simon: &mut Simon) {
     frame.render_widget(big_title, chunks[0]);
 
     let menu_block = Block::default()
+        .title(" Menu ")
         .borders(Borders::ALL)
         .style(Style::default());
 
@@ -223,12 +289,23 @@ fn draw_main_menu(frame: &mut Frame, simon: &mut Simon) {
         .highlight_symbol(">")
         .highlight_spacing(HighlightSpacing::Always);
 
+    let split_menu_area = Layout::new(Direction::Horizontal, [
+            Constraint::Percentage(30),
+            Constraint::Percentage(50)
+        ]).split(chunks[1].centered(Constraint::Percentage(90), Constraint::Percentage(90)));
+
+    /* frame.render_stateful_widget(
+        menu_list, 
+        chunks[1].centered(Constraint::Percentage(30), Constraint::Percentage(50)), 
+        &mut simon.app_state.menu_list.state
+    ); */
     frame.render_stateful_widget(
         menu_list, 
-        chunks[1].centered(Constraint::Percentage(50), Constraint::Percentage(50)), 
-        &mut simon.app_state.menu_list.state
+        split_menu_area[0],
+        &mut simon.app_state.menu_list.state 
     );
-    //frame.render_widget(menu_list, chunks[1].centered(Constraint::Percentage(50), Constraint::Percentage(50)));
+
+    draw_controls_modal(frame, Some(split_menu_area[1]));
 }
 
 fn draw_game(frame: &mut Frame, simon: &mut Simon) {
