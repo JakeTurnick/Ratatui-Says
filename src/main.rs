@@ -18,7 +18,7 @@ mod app;
 mod ui;
 use crate::{
     app::{
-        GameEvent, GameMode, Scene, Simon
+        GameEvent, GameMode, GameState, Scene, Simon
     },
     ui::ui
 };
@@ -37,7 +37,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut simon = Simon::new();
     //simon.add_to_pattern(4); // Old way: method
     // new way: Associated function only borrows the current pattern, allowing the rest of the simon instance to be borrowed
-    Simon::add_to_pattern(&mut simon.current_pattern, 4);
+    GameState::add_to_pattern(&mut simon.game_state.current_pattern, 4);
 
     let res = run_app(&mut terminal, &mut simon);
 
@@ -183,7 +183,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
                             }
                             KeyCode::Up | KeyCode::Down | KeyCode::Left | KeyCode::Right
                                 if simon.app_state.current_scene == Scene::Game && !simon.app_state.is_paused => {
-                                    simon.handle_keyboard_color_selection(key.code);
+                                    simon.game_state.handle_keyboard_color_selection(key.code);
                                 }
                             KeyCode::Right | KeyCode::Down => { simon.select_next_list_item(); }
                             KeyCode::Left | KeyCode::Up => { simon.select_previous_list_item(); }
@@ -198,7 +198,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
                                         }
                                         match c {
                                             'w' | 'a' | 's' | 'd' => { 
-                                                simon.handle_keyboard_color_selection(key.code); 
+                                                simon.game_state.handle_keyboard_color_selection(key.code); 
                                             }
                                             _ => {}
                                         }

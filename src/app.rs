@@ -136,6 +136,7 @@ impl AppState {
 
 pub struct GameState {
     pub mode: GameMode,
+    pub current_pattern: Vec<Colors>,
     pub shown_color: Option<Colors>,
     pub hovered_color: Option<Colors>,
     pub mouse_pos: (u16, u16),
@@ -147,6 +148,7 @@ impl GameState {
     pub fn new() -> GameState {
         GameState { 
             mode: GameMode::Preparing,
+            current_pattern: Vec::new(),
             shown_color: None,
             hovered_color: None,
             mouse_pos: (0, 0),
@@ -161,6 +163,45 @@ impl GameState {
         }
         self.hovered_color = Some(color);
     }
+
+    pub fn add_to_pattern(pattern: &mut Vec<Colors>, iterations: i8) {
+        for _i in 0..iterations {
+            let new_color = Colors::from_index(rand::random_range(0..=3)).expect("Random range should be within bounds of hard-coded enum");
+            pattern.push(new_color);
+        }
+    }
+
+    pub fn handle_keyboard_color_selection(&mut self, direction: KeyCode) {
+        if self.mode != GameMode::AwaitingInput { return }
+
+        const WIDTH: u8 = 2;
+
+        let mut row: u8 = 0;
+        let mut col: u8 = 0;
+        let mut index: u8;
+
+        if let Some(color) = self.hovered_color {
+            index = Colors::to_index(color);
+            row = index / WIDTH;
+            col = index % WIDTH;
+        }
+        
+        match direction {
+            KeyCode::Up | KeyCode::Char('w') => { row = row.saturating_sub(1); }
+            KeyCode::Down | KeyCode::Char('s') => { row = row.saturating_add(1); }
+            KeyCode::Left | KeyCode::Char('a') => { col = col.saturating_sub(1); }
+            KeyCode::Right | KeyCode::Char('d') => { col = col.saturating_add(1); }
+            _ => {}
+        }
+
+        row = row.clamp(0, 1);
+        col = col.clamp(0, 1);
+
+        index = (row * WIDTH) + col;
+
+        //self.debug_msg = format!("color index: {:?}", index);
+        self.hovered_color = Colors::from_index(index);
+    }
 }
 
 #[derive(PartialEq)]
@@ -170,11 +211,6 @@ pub enum GameMode {
     AwaitingInput,
     GameOver,
 }
-
-// Should hold overarchin state and info
-// TODO - move game state & logic into game_state
-// ^-- GOAL: start new game with `simon.game_state = GameState::new()`
-
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ScoreItem {
@@ -289,7 +325,6 @@ impl ScoreState {
 
 
 pub struct Simon {
-    pub current_pattern: Vec<Colors>,
     pub step_index: usize,          // index of current_pattern
     pub last_step_time: Instant,    // color flash timings
     pub game_state: GameState,
@@ -301,7 +336,7 @@ pub struct Simon {
 impl Simon {
     pub fn new() -> Simon {
         Simon {
-            current_pattern: Vec::new(),
+            //current_pattern: Vec::new(),
             step_index: 0,
             last_step_time: Instant::now(),
             game_state: GameState::new(),
@@ -345,7 +380,7 @@ impl Simon {
                     self.last_step_time = Instant::now();
 
                     // Reset to Player's turn
-                    if self.step_index >= self.current_pattern.len() {
+                    if self.step_index >= self.game_state.current_pattern.len() {
                         self.game_state.mode = GameMode::AwaitingInput;
                         self.game_state.shown_color = None;
                         self.game_state.hovered_color = Some(Colors::RED);
@@ -354,7 +389,7 @@ impl Simon {
                 } else if elapsed > Duration::from_millis(700) {
                     self.game_state.shown_color = None; // The "gap" between flashes
                 } else {
-                    if let Some(&color) = self.current_pattern.get(self.step_index) {
+                    if let Some(&color) = self.game_state.current_pattern.get(self.step_index) {
                         self.game_state.shown_color = Some(color);
                     }
                 }
@@ -363,61 +398,23 @@ impl Simon {
         }   
     }
 
-    pub fn add_to_pattern(pattern: &mut Vec<Colors>, iterations: i8) {
-        for _i in 0..iterations {
-            let new_color = Colors::from_index(rand::random_range(0..=3)).expect("Random range should be within bounds of hard-coded enum");
-            pattern.push(new_color);
-        }
-    }
-
-    pub fn handle_keyboard_color_selection(&mut self, direction: KeyCode) {
-        if self.game_state.mode != GameMode::AwaitingInput { return }
-
-        const WIDTH: u8 = 2;
-
-        let mut row: u8 = 0;
-        let mut col: u8 = 0;
-        let mut index: u8;
-
-        if let Some(color) = self.game_state.hovered_color {
-            index = Colors::to_index(color);
-            row = index / WIDTH;
-            col = index % WIDTH;
-        }
-        
-        match direction {
-            KeyCode::Up | KeyCode::Char('w') => { row = row.saturating_sub(1); }
-            KeyCode::Down | KeyCode::Char('s') => { row = row.saturating_add(1); }
-            KeyCode::Left | KeyCode::Char('a') => { col = col.saturating_sub(1); }
-            KeyCode::Right | KeyCode::Char('d') => { col = col.saturating_add(1); }
-            _ => {}
-        }
-
-        row = row.clamp(0, 1);
-        col = col.clamp(0, 1);
-
-        index = (row * WIDTH) + col;
-
-        //self.debug_msg = format!("color index: {:?}", index);
-        self.game_state.hovered_color = Colors::from_index(index);
-    }
-
+    // Not in game_state because GameOver logic changes app behaviro (text entry)
     pub fn handle_player_guess(&mut self, color: Colors) {
         if self.game_state.mode != GameMode::AwaitingInput {
             return;
         }
         self.game_state.shown_color = Some(color);
         self.last_step_time = Instant::now();
-        if color == self.current_pattern[self.step_index] {
+        if color == self.game_state.current_pattern[self.step_index] {
             self.game_state.current_score += 1;
             self.debug_msg = format!("Correct! Score: {}", self.game_state.current_score);
             
             self.step_index += 1;
 
-            if self.step_index >= self.current_pattern.len() {
+            if self.step_index >= self.game_state.current_pattern.len() {
                 self.debug_msg = format!("New pattern!");
                 //self.add_to_pattern(1);
-                Simon::add_to_pattern(&mut self.current_pattern, 1);
+                GameState::add_to_pattern(&mut self.game_state.current_pattern, 1);
 
                 self.game_state.mode = GameMode::Preparing;
             } 
@@ -427,8 +424,6 @@ impl Simon {
             self.app_state.enable_text_entry = true;
         }
     }
-
-    // List functions
 
     pub fn select_next_list_item(&mut self) {
         if self.app_state.menu_list.state.selected().unwrap_or(0) >= self.app_state.menu_list.items.len() - 1 {
@@ -445,7 +440,5 @@ impl Simon {
         } else {
             self.app_state.menu_list.state.select_previous();
         }
-        
     }
-
 }
