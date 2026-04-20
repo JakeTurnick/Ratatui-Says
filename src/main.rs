@@ -150,7 +150,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
                                 if simon.game_state.mode == GameMode::GameOver {
                                     // Escape from score input
                                     simon.game_state.mode = GameMode::Preparing; // should replace with GameState::new()
-                                    simon.app_state.change_scene(Scene::MainMenu);
+                                    simon.change_scene(Scene::MainMenu);
                                 } else if simon.app_state.current_scene != Scene::MainMenu {
                                     simon.app_state.is_paused = !simon.app_state.is_paused;
                                 }
@@ -170,7 +170,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
                                     if simon.score_state.is_name_new(&name) {
                                         simon.score_state.save_score(name, score);
                                         simon.debug_msg = String::new();
-                                        simon.app_state.change_scene(Scene::MainMenu);
+                                        simon.change_scene(Scene::MainMenu);
                                         simon.game_state.mode = GameMode::Preparing;
                                     } else {
                                         simon.debug_msg = String::from("That name is already taken");
@@ -265,7 +265,7 @@ fn select_menu_item(simon: &mut Simon) {
     if let Some(selection) = simon.app_state.menu_list.state.selected() {
         let selected_scene = simon.app_state.menu_list.items[selection].scene;
         
-        simon.app_state.change_scene(selected_scene);
+        simon.change_scene(selected_scene);
         if simon.app_state.is_paused {
             simon.app_state.is_paused = false;
         }

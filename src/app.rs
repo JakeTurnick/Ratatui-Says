@@ -113,28 +113,10 @@ impl AppState {
             enable_text_entry: false
         }
     }
-
-    pub fn change_scene(&mut self, scene: Scene) {
-        match scene {
-            Scene::MainMenu => { self.current_scene = Scene::MainMenu }
-            Scene::Game => { self.current_scene = Scene::Game }
-            Scene::Scores => { self.current_scene = Scene::Scores }
-            Scene::Exit => { self.current_scene = Scene::Exit }
-        }
-
-        self.menu_list = MenuList::from_iter([
-                ("Main Menu", Scene::MainMenu),
-                ("Play", Scene::Game),
-                ("Scores", Scene::Scores),
-                ("Exit game", Scene::Exit),
-            ]);
-        self.menu_list.items.retain(|item| {
-            item.scene != scene
-        });
-    }
 }
 
 pub struct GameState {
+    pub in_progress: bool,
     pub mode: GameMode,
     pub current_pattern: Vec<Colors>,
     pub shown_color: Option<Colors>,
@@ -147,6 +129,7 @@ pub struct GameState {
 impl GameState {
     pub fn new() -> GameState {
         GameState { 
+            in_progress: false,
             mode: GameMode::Preparing,
             current_pattern: Vec::new(),
             shown_color: None,
@@ -344,6 +327,28 @@ impl Simon {
             score_state: ScoreState::new(),
             debug_msg: String::from("debug")
         }
+    }
+
+    pub fn change_scene(&mut self, scene: Scene) {
+        match scene {
+            Scene::MainMenu => { self.app_state.current_scene = Scene::MainMenu }
+            Scene::Game => { 
+                self.game_state = GameState::new();
+                self.app_state.current_scene = Scene::Game 
+            }
+            Scene::Scores => { self.app_state.current_scene = Scene::Scores }
+            Scene::Exit => { self.app_state.current_scene = Scene::Exit }
+        }
+
+        self.app_state.menu_list = MenuList::from_iter([
+                ("Main Menu", Scene::MainMenu),
+                ("Play", Scene::Game),
+                ("Scores", Scene::Scores),
+                ("Exit game", Scene::Exit),
+            ]);
+        self.app_state.menu_list.items.retain(|item| {
+            item.scene != scene
+        });
     }
 
     // Simon's turn
