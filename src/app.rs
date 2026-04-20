@@ -128,7 +128,7 @@ pub struct GameState {
 
 impl GameState {
     pub fn new() -> GameState {
-        GameState { 
+        let mut new_game = GameState { 
             in_progress: false,
             mode: GameMode::Preparing,
             current_pattern: Vec::new(),
@@ -137,7 +137,11 @@ impl GameState {
             mouse_pos: (0, 0),
             clickables: vec!(),
             current_score: 0
-        }
+        };
+
+        GameState::add_to_pattern(&mut new_game.current_pattern, 4);
+
+        return new_game
     }
 
     pub fn handle_hovered_color(&mut self, color: Colors) {
@@ -410,6 +414,10 @@ impl Simon {
         }
         self.game_state.shown_color = Some(color);
         self.last_step_time = Instant::now();
+
+        //self.debug_msg = format!("step: {:?} / len {:?}", self.step_index, self.game_state.current_pattern.len());
+        //println!("step: {:?} / len {:?}", self.step_index, self.game_state.current_pattern.len());
+        //return; //panics here
         if color == self.game_state.current_pattern[self.step_index] {
             self.game_state.current_score += 1;
             self.debug_msg = format!("Correct! Score: {}", self.game_state.current_score);
