@@ -206,7 +206,7 @@ fn draw_input_score_modal(frame: &mut Frame, simon: &Simon ) {
     frame.render_widget(exit_msg, modal_chunks[4]);
 }
 
-#[warn(dead_code)]
+#[allow(dead_code)]
 fn draw_stateful_center_modal<W, S>(frame: &mut Frame, widget: W, state: &mut S)
     where W: StatefulWidget<State = S> {
     // No behind bleed-through, no need for background
