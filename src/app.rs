@@ -121,6 +121,7 @@ pub struct GameState {
     pub current_pattern: Vec<Colors>,
     pub shown_color: Option<Colors>,
     pub hovered_color: Option<Colors>,
+    pub previously_hovered_color: Option<Colors>,
     pub mouse_pos: (u16, u16),
     pub clickables: Vec<(Colors, Rect)>,
     pub current_score: u8
@@ -134,6 +135,7 @@ impl GameState {
             current_pattern: Vec::new(),
             shown_color: None,
             hovered_color: None,
+            previously_hovered_color: None,
             mouse_pos: (0, 0),
             clickables: vec!(),
             current_score: 0
@@ -149,6 +151,7 @@ impl GameState {
             return;
         }
         self.hovered_color = Some(color);
+        self.previously_hovered_color = Some(color);
     }
 
     pub fn add_to_pattern(pattern: &mut Vec<Colors>, iterations: i8) {
@@ -163,15 +166,22 @@ impl GameState {
 
         const WIDTH: u8 = 2;
 
-        let mut row: u8 = 0;
-        let mut col: u8 = 0;
+        let mut row: u8;
+        let mut col: u8;
         let mut index: u8;
+        let color: Colors;
 
-        if let Some(color) = self.hovered_color {
-            index = Colors::to_index(color);
-            row = index / WIDTH;
-            col = index % WIDTH;
+        if let Some(c) = self.hovered_color {
+            color = c;
+        } else if let Some(c) = self.previously_hovered_color {
+            color = c;
+        } else {
+            color = Colors::RED;
         }
+
+        index = Colors::to_index(color);
+        row = index / WIDTH;
+        col = index % WIDTH;
         
         match direction {
             KeyCode::Up | KeyCode::Char('w') => { row = row.saturating_sub(1); }
@@ -188,6 +198,7 @@ impl GameState {
 
         //self.debug_msg = format!("color index: {:?}", index);
         self.hovered_color = Colors::from_index(index);
+        self.previously_hovered_color = Colors::from_index(index);
     }
 }
 
@@ -372,6 +383,7 @@ impl Simon {
                 // wait 1 second, start the sequence
                 if self.last_step_time.elapsed() > Duration::from_millis(200) {
                     self.game_state.shown_color = None;
+                    self.game_state.hovered_color = None;
                 }
                 if self.last_step_time.elapsed() > Duration::from_millis(1000) {
                     self.game_state.mode = GameMode::ShowingPattern;
@@ -392,8 +404,14 @@ impl Simon {
                     if self.step_index >= self.game_state.current_pattern.len() {
                         self.game_state.mode = GameMode::AwaitingInput;
                         self.game_state.shown_color = None;
-                        self.game_state.hovered_color = Some(Colors::RED);
                         self.step_index = 0;
+                        
+                        let new_hover: Option<Colors>;
+                        if let Some(color) = self.game_state.previously_hovered_color {
+                            new_hover = Some(color);
+                        } else { new_hover = Some(Colors::RED); }
+                        self.game_state.hovered_color = new_hover;
+                        self.debug_msg = format!("Prev Hovered: {:?}", self.game_state.previously_hovered_color);
                     }
                 } else if elapsed > Duration::from_millis(700) {
                     self.game_state.shown_color = None; // The "gap" between flashes
@@ -415,9 +433,6 @@ impl Simon {
         self.game_state.shown_color = Some(color);
         self.last_step_time = Instant::now();
 
-        //self.debug_msg = format!("step: {:?} / len {:?}", self.step_index, self.game_state.current_pattern.len());
-        //println!("step: {:?} / len {:?}", self.step_index, self.game_state.current_pattern.len());
-        //return; //panics here
         if color == self.game_state.current_pattern[self.step_index] {
             self.game_state.current_score += 1;
             self.debug_msg = format!("Correct! Score: {}", self.game_state.current_score);
