@@ -15,3 +15,5 @@ Also supports mouse clicks for the color tiles!
 
 ### Scores
 ![Score Screen](/readme_assets/scores_scene.png)
+
+AI Disclaimer - This was a learning project, I'll own 100% of the code but definitely asked Gemini to explain syntax and help me understand why certain bugs were happening. No in-editor AI - web only questions & answers.
