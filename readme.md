@@ -1,5 +1,11 @@
 # Ratatui Says
-A Simon Says game made as a Ratatui terminal game
+Simon Says made as a Ratatui terminal game
+
+WASD / ↑←→↓ - change selection
+Space / Enter - select
+Esc - pause
+
+Also supports mouse clicks for the color tiles!
 
 ### Title
 ![Title Screen](/readme_assets/title_scene.png)
