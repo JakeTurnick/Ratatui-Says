@@ -146,7 +146,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
                             KeyCode::Esc => {
                                 if simon.game_state.mode == GameMode::GameOver {
                                     // Escape from score input
-                                    simon.game_state.mode = GameMode::Preparing; // should replace with GameState::new()
+                                    simon.game_state.mode = GameMode::Preparing;
+                                    simon.app_state.enable_text_entry = false;
                                     simon.change_scene(Scene::MainMenu);
                                 } else if simon.app_state.current_scene != Scene::MainMenu {
                                     simon.app_state.is_paused = !simon.app_state.is_paused;
@@ -169,6 +170,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, simon: &mut Simon) -> io::Res
                                         simon.debug_msg = String::new();
                                         simon.change_scene(Scene::MainMenu);
                                         simon.game_state.mode = GameMode::Preparing;
+                                        simon.app_state.enable_text_entry = false;
                                     } else {
                                         simon.debug_msg = String::from("That name is already taken");
                                     }
