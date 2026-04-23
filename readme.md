@@ -1,7 +1,7 @@
 # Ratatui Says
 Simon Says made as a Ratatui terminal game
 
-WASD / ↑←→↓ - change selection
+WASD / ↑←↓→ - change selection
 Space / Enter - select
 Esc - pause
 
